@@ -1,60 +1,146 @@
-from datetime import datetime
-from typing import List, Literal, Optional
+"""
+Pydantic schemas for Surplus Food Donation Offers and Redistribution.
+"""
+from datetime import datetime, timezone
+import math
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
 from app.models.enums import DonationStatus, MealType
 
 
+def _validate_finite_positive(v: float, name: str) -> float:
+    if not math.isfinite(v):
+        raise ValueError(f"{name} must be a finite numeric value")
+    if v <= 0:
+        raise ValueError(f"{name} must be greater than zero")
+    return round(float(v), 2)
+
+
 class DishItem(BaseModel):
-    name: str = Field(..., max_length=255)
-    quantityKg: float = Field(..., gt=0)
+    name: str = Field(..., min_length=1, max_length=255, description="Name of dish component")
+    quantityKg: float = Field(..., description="Weight in kilograms")
+
+    @field_validator("quantityKg")
+    @classmethod
+    def validate_quantity(cls, v: float) -> float:
+        return _validate_finite_positive(v, "quantityKg")
 
 
 class SurplusDonationBase(BaseModel):
-    food_title: str = Field(..., max_length=255)
-    dishes: List[DishItem]
-    total_quantity_kg: float = Field(..., gt=0)
-    servings_count: int = Field(..., gt=0)
-    meal_type: MealType
-    prepared_at: str = Field(..., max_length=100)
+    food_title: str = Field(..., min_length=1, max_length=255, description="Headline description of donation offer")
+    dishes: List[DishItem] = Field(..., min_length=1, description="List of unserved dish items")
+    total_quantity_kg: float = Field(..., description="Total batch weight in kg")
+    servings_count: int = Field(..., gt=0, description="Estimated meal portions")
+    meal_type: MealType = Field(..., description="Originating meal slot")
+    prepared_at: str = Field(..., min_length=1, max_length=100, description="Preparation time label")
     temperature_at_packaging: float = Field(..., description="Degrees Celsius at packaging")
-    is_hygienically_packed: bool = True
-    is_plate_leftover: Literal[False] = Field(
+    is_hygienically_packed: bool = Field(default=True, description="Hygiene packing verification")
+    is_plate_leftover: bool = Field(
         default=False,
-        description="Strict invariant: donations must never be plate leftovers"
+        description="Strict invariant: donations must NEVER be plate leftovers",
     )
-    expiry_deadline: str = Field(..., max_length=100)
-    kitchen_facility: str = Field(..., max_length=255)
-    pickup_location: str = Field(..., max_length=255)
-    beneficiary_target: str = Field(..., max_length=255)
-    image_url: Optional[str] = None
+    expiry_deadline: str = Field(..., min_length=1, max_length=100, description="ISO timestamp of expiration")
+    pickup_location: str = Field(..., min_length=1, max_length=255, description="Facility dispatch location")
+    beneficiary_target: str = Field(..., min_length=1, max_length=255, description="Intended distribution target")
+    image_url: Optional[str] = Field(default=None, max_length=1024)
+
+    @field_validator("total_quantity_kg")
+    @classmethod
+    def validate_total_kg(cls, v: float) -> float:
+        return _validate_finite_positive(v, "total_quantity_kg")
+
+    @field_validator("temperature_at_packaging")
+    @classmethod
+    def validate_temperature(cls, v: float) -> float:
+        if not math.isfinite(v):
+            raise ValueError("temperature_at_packaging must be a finite numeric value")
+        # Critical food safety rule: food in the danger zone (8°C to 60°C) cannot be donated
+        if 8.0 < v < 60.0:
+            raise ValueError(
+                f"Critical Temperature Warning ({v}°C): Food must be hot-held (>= 60°C) "
+                f"or rapid-chilled (<= 8°C) before safe packing."
+            )
+        return round(float(v), 2)
 
     @field_validator("is_plate_leftover")
     @classmethod
     def validate_not_leftover(cls, v: bool) -> bool:
         if v is True:
-            raise ValueError("Plate leftovers are strictly prohibited from redistribution for human consumption.")
+            raise ValueError(
+                "Food Safety Policy Violation: Customer plate leftovers strictly barred "
+                "from human consumption redistribution."
+            )
         return False
 
+    @field_validator("expiry_deadline")
+    @classmethod
+    def validate_expiry_future(cls, v: str) -> str:
+        try:
+            # Normalize ISO string with Z or timezone offset
+            clean_str = v.replace("Z", "+00:00")
+            dt = datetime.fromisoformat(clean_str)
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            now = datetime.now(timezone.utc)
+            if dt <= now:
+                raise ValueError("Expiry deadline must be in the future.")
+        except Exception as e:
+            if "Expiry deadline must be in the future" in str(e):
+                raise
+            # If not strict ISO, ensure it is non-empty
+            if not v.strip():
+                raise ValueError("Expiry deadline cannot be empty.")
+        return v
 
-class SurplusDonationCreate(SurplusDonationBase):
-    id: Optional[str] = None
-    pickup_pin: Optional[str] = Field(
-        default=None,
-        min_length=4,
-        max_length=6,
-        description="Optional 4-digit PIN; generated securely if omitted"
-    )
+
+class SurplusDonationCreateRequest(SurplusDonationBase):
+    """
+    Client request to create a surplus donation offer.
+    Facility is derived strictly from the authenticated kitchen staff's session.
+    """
+    pass
 
 
 class SurplusDonationRead(SurplusDonationBase):
+    """
+    Representation of a surplus donation offer for authorized readers.
+    Notice: pickup_pin_hash and plaintext PIN are NEVER exposed in this schema.
+    """
     model_config = ConfigDict(from_attributes=True)
 
     id: str
     status: DonationStatus
+    kitchen_facility: str
     claimed_by_ngo_id: Optional[str] = None
     claimed_by_ngo_name: Optional[str] = None
     claimed_at: Optional[str] = None
     completed_at: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    # Notice: pickup_pin_hash is strictly omitted from read schema
+
+
+class SurplusDonationCreateResponse(SurplusDonationRead):
+    """
+    Response returned ONLY to the creating kitchen supervisor upon creation.
+    Contains the one-time plaintext pickup PIN to hand over to the authorized driver.
+    """
+    pickup_pin: str
+
+
+class SurplusDonationListResponse(BaseModel):
+    """List of surplus donation offers."""
+    items: List[SurplusDonationRead]
+    total: int
+
+
+# Backward compatibility aliases
+class SurplusDonationCreate(SurplusDonationBase):
+    id: Optional[str] = None
+    kitchen_facility: Optional[str] = Field(default=None, max_length=255)
+    pickup_pin: Optional[str] = Field(
+        default=None,
+        min_length=4,
+        max_length=6,
+        description="Optional 4-digit PIN; generated securely if omitted",
+    )

@@ -26,6 +26,14 @@ class KitchenLog(Base):
     plate_waste_kg = Column(Float, nullable=False, doc="Post-consumption plate waste for composting")
     notes = Column(Text, nullable=True)
     recorded_by = Column(String(255), nullable=False)
+    facility_id = Column(
+        String(255),
+        nullable=False,
+        default="Grand Central Mess - Block B",
+        server_default="Grand Central Mess - Block B",
+        index=True,
+        doc="Facility / Mess identifier for institutional scoping",
+    )
     image_url = Column(String(1024), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

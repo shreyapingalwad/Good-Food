@@ -8,6 +8,8 @@ from app.api.health import router as health_router
 from app.api.auth import router as auth_router
 from app.api.attendance import router as attendance_router
 from app.api.ratings import router as ratings_router
+from app.api.kitchen import router as kitchen_router
+from app.api.surplus import router as surplus_router
 from app.core.config import get_settings
 
 logger = logging.getLogger("messaver.backend")
@@ -77,6 +79,12 @@ def create_application() -> FastAPI:
 
     # Mount Meal and Dish Rating Endpoints
     app.include_router(ratings_router, prefix=f"{settings.API_V1_STR}/ratings")
+
+    # Mount Kitchen Operations Endpoints
+    app.include_router(kitchen_router, prefix=f"{settings.API_V1_STR}/kitchen")
+
+    # Mount Surplus Redistribution Endpoints
+    app.include_router(surplus_router, prefix=f"{settings.API_V1_STR}/surplus")
 
     return app
 

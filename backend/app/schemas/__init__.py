@@ -22,9 +22,25 @@ from app.schemas.dish_rating import (
     RatingSubmitRequest,
     RatingsSummaryResponse,
 )
-from app.schemas.kitchen import KitchenLogBase, KitchenLogCreate, KitchenLogRead
+from app.schemas.kitchen import (
+    KitchenLogBase,
+    KitchenLogCreate,
+    KitchenLogCreateRequest,
+    KitchenLogHistoryResponse,
+    KitchenLogRead,
+    KitchenLogResponse,
+    KitchenSummaryResponse,
+)
 from app.schemas.ngo import NgoPartnerBase, NgoPartnerCreate, NgoPartnerRead
-from app.schemas.donation import DishItem, SurplusDonationBase, SurplusDonationCreate, SurplusDonationRead
+from app.schemas.donation import (
+    DishItem,
+    SurplusDonationBase,
+    SurplusDonationCreate,
+    SurplusDonationCreateRequest,
+    SurplusDonationCreateResponse,
+    SurplusDonationListResponse,
+    SurplusDonationRead,
+)
 from app.schemas.audit import AuditEventBase, AuditEventCreate, AuditEventRead
 from app.schemas.system_config import SystemConfigBase, SystemConfigCreate, SystemConfigRead
 from app.schemas.auth import (
