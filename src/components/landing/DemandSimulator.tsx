@@ -93,13 +93,67 @@ export const DemandSimulator: React.FC = () => {
                 <Sliders className="w-4 h-4 text-[#D8F078]" />
                 <span>Simulation Controls</span>
               </h3>
-              <span className="text-xs font-mono text-[#D8F078] bg-[#123B2A] px-2.5 py-1 rounded-lg border border-[#D8F078]/30">
-                Live Reactive
+              <span className="text-[11px] font-mono text-[#D8F078] bg-[#123B2A] px-2.5 py-1 rounded-lg border border-[#D8F078]/30">
+                Interactive Model Sandbox
               </span>
             </div>
 
+            {/* Quick Presets */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-mono text-[#A9B7A0] uppercase tracking-wider block">
+                Load Preset Scenario:
+              </span>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttendance(1450);
+                    setConsumptionPerPerson(0.42);
+                    setSafetyBuffer(5);
+                    setMealType('Lunch');
+                    setIsRainy(false);
+                    setIsExams(false);
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-[#151916] hover:bg-[#123B2A] hover:text-[#D8F078] border border-[#28312B] transition-colors truncate"
+                  title="Nominal Weekday Lunch"
+                >
+                  Weekday Lunch
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttendance(1850);
+                    setConsumptionPerPerson(0.45);
+                    setSafetyBuffer(7);
+                    setMealType('Dinner');
+                    setIsRainy(true);
+                    setIsExams(false);
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-[#151916] hover:bg-[#123B2A] hover:text-[#D8F078] border border-[#28312B] transition-colors truncate"
+                  title="Rainy Friday Dinner"
+                >
+                  Rainy Dinner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttendance(950);
+                    setConsumptionPerPerson(0.36);
+                    setSafetyBuffer(4);
+                    setMealType('Breakfast');
+                    setIsRainy(false);
+                    setIsExams(true);
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl text-[11px] font-medium bg-[#151916] hover:bg-[#123B2A] hover:text-[#D8F078] border border-[#28312B] transition-colors truncate"
+                  title="Exam Week Breakfast"
+                >
+                  Exam Breakfast
+                </button>
+              </div>
+            </div>
+
             {/* Meal Type Selector */}
-            <div className="space-y-2">
+            <div className="space-y-2 pt-2 border-t border-[#28312B]/60">
               <label className="text-xs font-mono text-[#A9B7A0] uppercase tracking-wider block">
                 Target Meal Service
               </label>
@@ -123,7 +177,7 @@ export const DemandSimulator: React.FC = () => {
             {/* Slider 1: Expected Attendance */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-mono text-[#A9B7A0] uppercase tracking-wider">
+                <label htmlFor="sim-attendance" className="text-xs font-mono text-[#A9B7A0] uppercase tracking-wider">
                   Confirmed Diners / Opt-ins
                 </label>
                 <span className="text-base font-bold font-mono text-[#D8F078]">
@@ -131,13 +185,15 @@ export const DemandSimulator: React.FC = () => {
                 </span>
               </div>
               <input
+                id="sim-attendance"
                 type="range"
+                aria-label="Confirmed student attendance opt-ins"
                 min={400}
                 max={3200}
                 step={50}
                 value={attendance}
                 onChange={(e) => setAttendance(Number(e.target.value))}
-                className="w-full h-2 bg-[#28312B] rounded-lg appearance-none cursor-pointer accent-[#D8F078]"
+                className="w-full h-2 bg-[#28312B] rounded-lg appearance-none cursor-pointer accent-[#D8F078] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none"
               />
               <div className="flex justify-between text-[10px] font-mono text-[#A9B7A0]">
                 <span>400 (Single Block)</span>
@@ -149,7 +205,7 @@ export const DemandSimulator: React.FC = () => {
             {/* Slider 2: Historical Consumption */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-mono text-[#A9B7A0] uppercase tracking-wider">
+                <label htmlFor="sim-intake" className="text-xs font-mono text-[#A9B7A0] uppercase tracking-wider">
                   Avg Historical Intake per Diner
                 </label>
                 <span className="text-base font-bold font-mono text-[#F7F5EF]">
@@ -157,13 +213,15 @@ export const DemandSimulator: React.FC = () => {
                 </span>
               </div>
               <input
+                id="sim-intake"
                 type="range"
+                aria-label="Average historical food intake in kilograms per diner"
                 min={0.28}
                 max={0.65}
                 step={0.01}
                 value={consumptionPerPerson}
                 onChange={(e) => setConsumptionPerPerson(Number(e.target.value))}
-                className="w-full h-2 bg-[#28312B] rounded-lg appearance-none cursor-pointer accent-[#D8F078]"
+                className="w-full h-2 bg-[#28312B] rounded-lg appearance-none cursor-pointer accent-[#D8F078] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none"
               />
               <div className="flex justify-between text-[10px] font-mono text-[#A9B7A0]">
                 <span>0.28 kg (Light)</span>
@@ -175,7 +233,7 @@ export const DemandSimulator: React.FC = () => {
             {/* Slider 3: Safety Buffer */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-mono text-[#A9B7A0] uppercase tracking-wider">
+                <label htmlFor="sim-buffer" className="text-xs font-mono text-[#A9B7A0] uppercase tracking-wider">
                   Configured Safety Buffer
                 </label>
                 <span className="text-base font-bold font-mono text-[#D8F078]">
@@ -183,13 +241,15 @@ export const DemandSimulator: React.FC = () => {
                 </span>
               </div>
               <input
+                id="sim-buffer"
                 type="range"
+                aria-label="Configured kitchen safety buffer percentage"
                 min={0}
                 max={20}
                 step={1}
                 value={safetyBuffer}
                 onChange={(e) => setSafetyBuffer(Number(e.target.value))}
-                className="w-full h-2 bg-[#28312B] rounded-lg appearance-none cursor-pointer accent-[#D8F078]"
+                className="w-full h-2 bg-[#28312B] rounded-lg appearance-none cursor-pointer accent-[#D8F078] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none"
               />
               <div className="flex justify-between text-[10px] font-mono text-[#A9B7A0]">
                 <span>0% (Exact)</span>
@@ -336,6 +396,25 @@ export const DemandSimulator: React.FC = () => {
                 </span>
               </div>
 
+            </div>
+
+            {/* Mathematical Model Trace Card */}
+            <div className="p-5 rounded-2xl bg-[#1C221E] border border-[#28312B] space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-[#A9B7A0] uppercase">Dynamic Formula Trace:</span>
+                <span className="text-[#D8F078]">Baseline Formula</span>
+              </div>
+              <div className="p-3 rounded-xl bg-[#151916] border border-[#28312B] font-mono text-[11px] text-[#A9B7A0] leading-relaxed overflow-x-auto">
+                <span className="text-[#D8F078] font-bold">{simulation.recommendedPrepKg} kg</span> = {attendance} diners × {consumptionPerPerson.toFixed(2)} kg × {mealMultiplier} ({mealType}) × {isRainy ? '1.05' : '1.00'} (rain) × {isExams ? '1.10' : '1.00'} (exams) × (1 + {safetyBuffer}%)
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-[#A9B7A0]">
+                <span>Status: Parameter matrix balanced</span>
+                <span className={`font-mono font-bold text-[10px] px-2 py-0.5 rounded-md ${
+                  safetyBuffer > 12 ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/25'
+                }`}>
+                  {simulation.surplusRisk}
+                </span>
+              </div>
             </div>
 
           </div>

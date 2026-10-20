@@ -32,7 +32,7 @@ export const AnalyticsPreview: React.FC = () => {
   ];
 
   return (
-    <section className="relative py-28 bg-[#151916] overflow-hidden">
+    <section id="impact" className="relative py-28 bg-[#151916] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Header */}

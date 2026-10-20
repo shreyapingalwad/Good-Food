@@ -73,26 +73,29 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Center Navigation Links (When on Landing Page) */}
           {activeView === 'landing' ? (
-            <nav className="hidden lg:flex items-center gap-7 text-sm font-medium text-[#A9B7A0]">
+            <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-[#A9B7A0]">
               <a href="#problem" className="hover:text-[#F7F5EF] transition-colors">
                 The Problem
               </a>
-              <a href="#workflow" className="hover:text-[#F7F5EF] transition-colors">
-                5-Stage Workflow
+              <a href="#technology" className="hover:text-[#F7F5EF] transition-colors">
+                Prediction Engine
               </a>
               <a href="#simulator" className="hover:text-[#F7F5EF] transition-colors flex items-center gap-1.5 text-[#F7F5EF]">
                 <Sparkles className="w-3.5 h-3.5 text-[#D8F078]" />
                 Demand Simulator
               </a>
-              <a href="#technology" className="hover:text-[#F7F5EF] transition-colors">
-                Prediction Engine
+              <a href="#workflow" className="hover:text-[#F7F5EF] transition-colors">
+                5-Stage Workflow
               </a>
               <a href="#redistribution" className="hover:text-[#F7F5EF] transition-colors">
                 Food Safety
               </a>
+              <a href="#impact" className="hover:text-[#F7F5EF] transition-colors">
+                Impact Telemetry
+              </a>
               <button 
                 onClick={onOpenAssetManifest}
-                className="text-xs text-[#A9B7A0] hover:text-[#D8F078] underline underline-offset-4 transition-colors"
+                className="text-xs text-[#A9B7A0] hover:text-[#D8F078] underline underline-offset-4 transition-colors ml-1"
               >
                 Asset Manifest
               </button>
@@ -205,11 +208,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               The Problem & Opportunity
             </a>
             <a 
-              href="#workflow" 
+              href="#technology" 
               onClick={() => setMobileMenuOpen(false)}
               className="block hover:text-[#F7F5EF]"
             >
-              5-Stage Workflow Pipeline
+              Dual-Engine Prediction
             </a>
             <a 
               href="#simulator" 
@@ -219,11 +222,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               ✨ Demand Simulator
             </a>
             <a 
-              href="#technology" 
+              href="#workflow" 
               onClick={() => setMobileMenuOpen(false)}
               className="block hover:text-[#F7F5EF]"
             >
-              Transparent Prediction Engine
+              5-Stage Workflow Pipeline
             </a>
             <a 
               href="#redistribution" 
@@ -231,6 +234,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="block hover:text-[#F7F5EF]"
             >
               Food Safety & NGO Network
+            </a>
+            <a 
+              href="#impact" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block hover:text-[#F7F5EF]"
+            >
+              Live Impact & Telemetry
             </a>
             <button 
               onClick={() => {

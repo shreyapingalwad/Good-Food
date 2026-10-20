@@ -64,7 +64,7 @@ export const App: React.FC = () => {
   };
 
   const handleSeeHowItWorks = () => {
-    const el = document.getElementById('workflow');
+    const el = document.getElementById('problem');
     if (el) {
       el.scrollIntoView({ behavior: 'smooth' });
     }
@@ -87,17 +87,30 @@ export const App: React.FC = () => {
       {/* View Switcher: Landing Page vs Active Application Portal */}
       {activeView === 'landing' ? (
         <div className="animate-in fade-in duration-300">
+          {/* Chapter 0: Hero & Value Proposition */}
           <HeroSection 
             onExplore={handleSelectRole} 
             onSeeHowItWorks={handleSeeHowItWorks} 
           />
-          <ImpactStats />
+
+          {/* Chapter 1: The Problem — Institutional Dining Food Waste Crisis */}
           <ProblemSection />
-          <WorkflowSection />
-          <DemandSimulator />
-          <RedistributionStory />
-          <AnalyticsPreview />
+
+          {/* Chapter 2: The Insight — Dual-Engine Baseline & Random Forest ML Architecture */}
           <TechEngineSection />
+
+          {/* Chapter 3: The Prediction — Interactive Demand Sandbox & Buffer Tuning */}
+          <DemandSimulator />
+
+          {/* Chapter 4: The Action — 5-Stage Closed Loop & Food Safety Cold Chain */}
+          <WorkflowSection />
+          <RedistributionStory />
+
+          {/* Chapter 5: The Impact — Measured Pilot Metrics & Operational Telemetry */}
+          <ImpactStats />
+          <AnalyticsPreview />
+
+          {/* Chapter 6: The Conclusion — Enterprise Role Portal Launchpad */}
           <CtaSection onSelectRole={handleSelectRole} />
         </div>
       ) : (

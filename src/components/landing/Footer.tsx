@@ -74,13 +74,15 @@ export const Footer: React.FC<FooterProps> = ({ onSelectRole, onOpenAssetManifes
           {/* Architecture Links */}
           <div className="space-y-3">
             <h4 className="text-xs font-mono uppercase tracking-wider text-[#F7F5EF] font-bold">
-              Engineering
+              Engineering & Architecture
             </h4>
             <ul className="space-y-2 text-xs text-[#A9B7A0]">
+              <li><a href="#problem" className="hover:text-[#D8F078] transition-colors">The Waste Dilemma</a></li>
+              <li><a href="#technology" className="hover:text-[#D8F078] transition-colors">Dual-Engine Predictor</a></li>
               <li><a href="#simulator" className="hover:text-[#D8F078] transition-colors">Demand Simulator</a></li>
               <li><a href="#workflow" className="hover:text-[#D8F078] transition-colors">5-Stage Workflow</a></li>
-              <li><a href="#technology" className="hover:text-[#D8F078] transition-colors">Random Forest Model</a></li>
               <li><a href="#redistribution" className="hover:text-[#D8F078] transition-colors">Food Safety Protocol</a></li>
+              <li><a href="#impact" className="hover:text-[#D8F078] transition-colors">Pilot Telemetry</a></li>
               <li>
                 <button onClick={onOpenAssetManifest} className="text-[#D8F078] hover:underline flex items-center gap-1">
                   <span>Asset Manifest</span>

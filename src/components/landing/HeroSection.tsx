@@ -91,14 +91,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItW
 
             {/* Supporting Text */}
             <p className="text-base sm:text-lg text-[#A9B7A0] max-w-xl font-normal leading-relaxed">
-              Predict meal demand, prevent avoidable waste, and connect surplus food with verified shelter networks. An AI-engineered institutional dining ecosystem.
+              Predict meal demand. Prevent avoidable waste. Connect surplus food with communities that need it.
             </p>
 
             {/* Action CTAs */}
             <div className="pt-2 flex flex-wrap items-center gap-4">
               <button
                 onClick={() => onExplore('student')}
-                className="group px-7 py-3.5 rounded-2xl font-semibold text-sm text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] transition-all duration-200 shadow-glow-lime flex items-center gap-2.5 active:scale-95"
+                className="group px-7 py-3.5 rounded-2xl font-semibold text-sm text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none transition-all duration-200 shadow-glow-lime flex items-center gap-2.5 active:scale-95"
               >
                 <span>Explore the Platform</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -106,7 +106,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItW
 
               <button
                 onClick={onSeeHowItWorks}
-                className="group px-6 py-3.5 rounded-2xl font-semibold text-sm text-[#F7F5EF] bg-[#1C221E] hover:bg-[#28312B] border border-[#28312B] hover:border-[#A9B7A0]/40 transition-all duration-200 flex items-center gap-2.5"
+                className="group px-6 py-3.5 rounded-2xl font-semibold text-sm text-[#F7F5EF] bg-[#1C221E] hover:bg-[#28312B] border border-[#28312B] hover:border-[#A9B7A0]/40 focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none transition-all duration-200 flex items-center gap-2.5"
               >
                 <div className="w-6 h-6 rounded-full bg-[#123B2A] flex items-center justify-center text-[#D8F078] group-hover:scale-110 transition-transform">
                   <Play className="w-2.5 h-2.5 fill-current ml-0.5" />
@@ -122,7 +122,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItW
                   <TrendingDown className="w-3.5 h-3.5" />
                   <span>-38%</span>
                 </div>
-                <p className="text-xs text-[#A9B7A0] leading-tight">Avoidable waste reduction</p>
+                <p className="text-xs text-[#A9B7A0] leading-tight">Pilot waste reduction benchmark</p>
               </div>
 
               <div className="space-y-1">
@@ -130,7 +130,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItW
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>100%</span>
                 </div>
-                <p className="text-xs text-[#A9B7A0] leading-tight">Food safety verification</p>
+                <p className="text-xs text-[#A9B7A0] leading-tight">Thermal safety inspection</p>
               </div>
 
               <div className="space-y-1">
