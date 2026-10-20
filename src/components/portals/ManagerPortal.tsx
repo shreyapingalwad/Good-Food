@@ -11,8 +11,13 @@ import {
   CheckCircle2, 
   Sparkles,
   BarChart3,
+  TrendingDown,
   TrendingUp,
-  FileCheck
+  FileCheck,
+  Cpu,
+  Layers,
+  ArrowUpRight,
+  Info
 } from 'lucide-react';
 
 export const ManagerPortal: React.FC = () => {
@@ -62,6 +67,26 @@ export const ManagerPortal: React.FC = () => {
     setTimeout(() => setNotification(null), 4000);
   };
 
+  // Weekly Waste Trends Data
+  const weeklyTrends = [
+    { day: 'Mon', preparedKg: 590, consumedKg: 554, surplusKg: 36, rate: '6.1%' },
+    { day: 'Tue', preparedKg: 580, consumedKg: 552, surplusKg: 28, rate: '4.8%' },
+    { day: 'Wed', preparedKg: 610, consumedKg: 585, surplusKg: 25, rate: '4.1%' },
+    { day: 'Thu', preparedKg: 595, consumedKg: 570, surplusKg: 25, rate: '4.2%' },
+    { day: 'Fri', preparedKg: 630, consumedKg: 598, surplusKg: 32, rate: '5.1%' },
+    { day: 'Sat', preparedKg: 510, consumedKg: 490, surplusKg: 20, rate: '3.9%' },
+    { day: 'Sun', preparedKg: 480, consumedKg: 462, surplusKg: 18, rate: '3.8%' }
+  ];
+
+  // Dish-Level Waste Metrics
+  const dishWasteRows = [
+    { name: 'Dal Tadka & Steamed Basmati Rice', preparedKg: 140, consumedKg: 128, plateWasteKg: 4.5, surplusKg: 7.5, status: 'Normal' },
+    { name: 'Paneer Butter Masala', preparedKg: 110, consumedKg: 106, plateWasteKg: 2.1, surplusKg: 1.9, status: 'Optimal' },
+    { name: 'Tandoori Roti & Raita', preparedKg: 95, consumedKg: 87, plateWasteKg: 5.2, surplusKg: 2.8, status: 'Monitor' },
+    { name: 'Organic Green Sprout Salad', preparedKg: 45, consumedKg: 38, plateWasteKg: 4.8, surplusKg: 2.2, status: 'Review' },
+    { name: 'Gulab Jamun with Cardamom Syrup', preparedKg: 55, consumedKg: 54, plateWasteKg: 0.8, surplusKg: 0.2, status: 'Optimal' }
+  ];
+
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       
@@ -75,20 +100,25 @@ export const ManagerPortal: React.FC = () => {
         </div>
       )}
 
-      {/* Top Controls: Buffer Management & Export Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 rounded-3xl border border-[#28312B]">
+      {/* Top Operations Header Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 sm:p-8 rounded-3xl border border-[#28312B] shadow-card-dark">
         <div>
-          <h2 className="text-lg font-bold text-[#F7F5EF] flex items-center gap-2">
-            <LayoutDashboard className="w-5 h-5 text-[#D8F078]" />
-            <span>Mess Operational Oversight & Governance</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#123B2A] border border-[#D8F078]/25 text-xs font-mono text-[#D8F078] mb-1.5">
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            <span>Campus Operational Analytics Workspace</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-editorial font-bold text-[#F7F5EF]">
+            Mess Executive Decision Lab
           </h2>
-          <p className="text-xs text-[#A9B7A0]">Review ML predictions, tune production safety buffers, and download audit-grade reports.</p>
+          <p className="text-xs text-[#A9B7A0] mt-0.5">
+            Review machine learning forecasts, tune safety buffer thresholds, and export compliance audit reports.
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setIsOverrideOpen(true)}
-            className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#1C221E] hover:bg-[#28312B] text-[#D8F078] border border-[#28312B] flex items-center gap-2 transition-colors"
+            className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#1C221E] hover:bg-[#28312B] text-[#D8F078] border border-[#28312B] hover:border-[#D8F078]/40 flex items-center gap-2 transition-all"
           >
             <Sliders className="w-4 h-4" />
             <span>Override Buffer ({safetyBuffer}%)</span>
@@ -96,7 +126,7 @@ export const ManagerPortal: React.FC = () => {
 
           <button
             onClick={handleExportCsv}
-            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] flex items-center gap-2 transition-all shadow-glow-lime active:scale-95"
+            className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center gap-2 transition-all active:scale-95"
           >
             <Download className="w-4 h-4" />
             <span>Export Audit CSV</span>
@@ -104,186 +134,259 @@ export const ManagerPortal: React.FC = () => {
         </div>
       </div>
 
-      {/* Prediction Engine Review Dashboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Forecast Comparison Suite: Tier 1 vs Tier 2 ML */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Column: Model Comparison Card */}
-        <div className="lg:col-span-7 glass-panel-elevated p-8 rounded-3xl border border-[#28312B] space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#28312B]">
-            <div>
-              <h3 className="text-base font-bold text-[#F7F5EF]">Next Service Forecast Breakdown</h3>
-              <p className="text-xs text-[#A9B7A0]">Headcount: 1,450 confirmed opt-ins | Service: Lunch</p>
-            </div>
-            <span className="text-xs font-mono text-[#D8F078] bg-[#123B2A] px-2.5 py-1 rounded-full border border-[#D8F078]/25">
-              Confidence: {prediction.confidenceScore}%
+        {/* Tier 1 Baseline Card */}
+        <div className="glass-panel p-6 rounded-3xl border border-[#28312B] space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#28312B]">
+            <span className="text-xs font-mono text-[#A9B7A0] uppercase">Tier 1: Formula Baseline</span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#1C221E] text-[#A9B7A0] border border-[#28312B]">
+              Deterministic
             </span>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            
-            <div className="p-4 rounded-2xl bg-[#151916] border border-[#28312B] space-y-1">
-              <span className="text-[11px] font-mono text-[#A9B7A0] block">Tier 1: Baseline Formula</span>
-              <div className="text-2xl font-bold font-editorial text-[#F7F5EF]">{prediction.baselineKg} kg</div>
-              <p className="text-[10px] text-[#A9B7A0]">Diners × historical mean</p>
+          <div>
+            <div className="text-3xl font-bold font-editorial text-[#F7F5EF]">
+              {prediction.baselineKg.toFixed(1)} kg
             </div>
-
-            <div className="p-4 rounded-2xl bg-[#151916] border border-[#28312B] space-y-1">
-              <span className="text-[11px] font-mono text-[#D8F078] block">Tier 2: Random Forest</span>
-              <div className="text-2xl font-bold font-editorial text-[#D8F078]">{prediction.mlPredictedKg} kg</div>
-              <p className="text-[10px] text-[#A9B7A0]">Multi-variable regressor</p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#123B2A]/40 border border-[#D8F078]/30 space-y-1">
-              <span className="text-[11px] font-mono text-[#D8F078] font-bold block">Final Recommendation</span>
-              <div className="text-2xl font-bold font-editorial text-[#F7F5EF]">{prediction.recommendedPreparationKg} kg</div>
-              <p className="text-[10px] text-[#D8F078]">Ensemble batch target</p>
-            </div>
-
+            <p className="text-xs text-[#A9B7A0] mt-1">Expected attendance × 0.42 kg/intake</p>
           </div>
-
-          {/* Validation Metrics */}
-          <div className="p-4 rounded-2xl bg-[#151916] border border-[#28312B] space-y-2">
-            <div className="text-xs font-bold text-[#F7F5EF] flex items-center justify-between">
-              <span>Chronological Model Evaluation Metrics</span>
-              <span className="font-mono text-[11px] text-[#D8F078]">Test Split: 30 Days</span>
-            </div>
-            <div className="grid grid-cols-2 gap-4 text-xs font-mono pt-1">
-              <div>
-                <span className="text-[#A9B7A0]">Mean Absolute Error (MAE): </span>
-                <strong className="text-[#D8F078]">±{prediction.maeKg} kg</strong>
-              </div>
-              <div>
-                <span className="text-[#A9B7A0]">Root Mean Square Error: </span>
-                <strong className="text-[#F7F5EF]">{prediction.rmseKg} kg</strong>
-              </div>
-            </div>
+          <div className="p-3 rounded-xl bg-[#151916] text-[11px] font-mono text-[#A9B7A0] space-y-1">
+            <div>Diners: 1,450 students</div>
+            <div>Variance: ±8.5% historical range</div>
           </div>
-
-          {/* Top Impact Factors */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase tracking-wider text-[#A9B7A0]">Feature Attribution Ranking</h4>
-            <div className="space-y-2">
-              {prediction.topFactors.map((f, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-[#151916] border border-[#28312B] flex items-center justify-between text-xs">
-                  <span className="text-[#F7F5EF]">{f.factor}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-[#D8F078] font-bold">{f.impact}</span>
-                    <div className="w-16 h-1.5 bg-[#28312B] rounded-full overflow-hidden hidden sm:block">
-                      <div className="h-full bg-[#D8F078]" style={{ width: `${f.percentage}%` }} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
         </div>
 
-        {/* Right Column: Waste Analytics & NGO Coordination Status */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          <div className="glass-panel p-6 rounded-3xl border border-[#28312B] space-y-4">
-            <h3 className="text-base font-bold text-[#F7F5EF] flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-[#D8F078]" />
-              <span>Shift Waste Mitigation Summary</span>
-            </h3>
-
-            <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[#151916] border border-[#28312B]">
-                <span className="text-[#A9B7A0]">Avoidable Food Loss:</span>
-                <span className="font-mono text-[#D8F078] font-bold">12.0 kg (-78% vs baseline)</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[#151916] border border-[#28312B]">
-                <span className="text-[#A9B7A0]">Plate Waste Compost Redirect:</span>
-                <span className="font-mono text-red-400 font-bold">4.5 kg (Bio-methanation)</span>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-xl bg-[#151916] border border-[#28312B]">
-                <span className="text-[#A9B7A0]">Financial Value Saved:</span>
-                <span className="font-mono text-[#D8F078] font-bold">₹1,140 / shift</span>
-              </div>
-            </div>
+        {/* Tier 2 Random Forest ML Card */}
+        <div className="glass-panel p-6 rounded-3xl border border-[#28312B] space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#28312B]">
+            <span className="text-xs font-mono text-[#D8F078] uppercase font-bold flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5" />
+              <span>Tier 2: Random Forest ML</span>
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/25">
+              Trained Model
+            </span>
           </div>
-
-          <div className="glass-panel p-6 rounded-3xl border border-[#28312B] space-y-4">
-            <h3 className="text-base font-bold text-[#F7F5EF] flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#D8F078]" />
-              <span>Surplus Approval & NGO Status</span>
-            </h3>
-
-            <div className="p-4 rounded-2xl bg-[#151916] border border-[#28312B] space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-[#F7F5EF]">Surplus Batch #DON-8841</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#123B2A] text-[#D8F078]">
-                  Safety Approved
-                </span>
-              </div>
-              <p className="text-[#A9B7A0]">
-                45.0 kg unserved Basmati Rice & Paneer Curry verified at 68.5°C. Picked up by Robin Hood Army.
-              </p>
+          <div>
+            <div className="text-3xl font-bold font-editorial text-[#D8F078]">
+              {prediction.mlPredictedKg.toFixed(1)} kg
             </div>
+            <p className="text-xs text-[#A9B7A0] mt-1">Features: Tuesday, Sunny, Rating 8.5/10</p>
           </div>
+          <div className="p-3 rounded-xl bg-[#151916] text-[11px] font-mono text-[#A9B7A0] space-y-1">
+            <div>Validated MAE: ±4.2 kg</div>
+            <div>Chronological split (30-day window)</div>
+          </div>
+        </div>
 
+        {/* Final Production Target with Safety Buffer */}
+        <div className="glass-panel-elevated p-6 rounded-3xl border border-[#D8F078]/40 space-y-4 shadow-glow-forest">
+          <div className="flex items-center justify-between pb-3 border-b border-[#28312B]">
+            <span className="text-xs font-mono text-[#D8F078] uppercase font-bold flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Final Recommended Batch</span>
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30">
+              +{safetyBuffer}% Buffer
+            </span>
+          </div>
+          <div>
+            <div className="text-4xl font-bold font-editorial text-[#F7F5EF]">
+              {prediction.recommendedPreparationKg.toFixed(1)} kg
+            </div>
+            <p className="text-xs text-[#D8F078] font-mono mt-1">
+              Safety margin: +{(prediction.recommendedPreparationKg - prediction.baselineKg).toFixed(1)} kg
+            </p>
+          </div>
+          <div className="p-3 rounded-xl bg-[#123B2A]/40 text-[11px] text-[#A9B7A0] flex items-center justify-between">
+            <span>Avoided Waste vs Static:</span>
+            <span className="text-xs font-mono font-bold text-[#D8F078]">-38.2 kg</span>
+          </div>
         </div>
 
       </div>
 
-      {/* Modal: Override Safety Buffer */}
+      {/* Operational Waste Mitigation & Prepared vs Consumed Trends */}
+      <div className="glass-panel p-8 rounded-3xl border border-[#28312B] space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#28312B]">
+          <div>
+            <h3 className="text-lg font-bold text-[#F7F5EF] flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-[#D8F078]" />
+              <span>Weekly Shift Production & Waste Trends</span>
+            </h3>
+            <p className="text-xs text-[#A9B7A0]">
+              Audited comparison of actual prepared kilograms vs. diner consumption across shifts.
+            </p>
+          </div>
+          <div className="text-xs font-mono text-[#A9B7A0]">
+            Average Waste Ratio: <strong className="text-[#D8F078]">4.5%</strong> (Industry Avg: 18%)
+          </div>
+        </div>
+
+        {/* Visual Chart Bars */}
+        <div className="grid grid-cols-2 sm:grid-cols-7 gap-3 pt-2">
+          {weeklyTrends.map((w, idx) => (
+            <div key={idx} className="p-4 rounded-2xl bg-[#151916] border border-[#28312B] flex flex-col justify-between space-y-3">
+              <div className="text-xs font-mono font-bold text-[#D8F078] uppercase">{w.day}</div>
+              
+              <div className="space-y-1.5">
+                <div className="text-xs font-bold text-[#F7F5EF]">{w.consumedKg} kg</div>
+                <div className="text-[10px] font-mono text-[#A9B7A0]">of {w.preparedKg} kg</div>
+              </div>
+
+              {/* Progress Visual Bar */}
+              <div className="w-full h-2 bg-[#28312B] rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#123B2A] to-[#D8F078] rounded-full"
+                  style={{ width: `${(w.consumedKg / w.preparedKg) * 100}%` }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] font-mono text-[#A9B7A0] pt-1 border-t border-[#28312B]">
+                <span>Surplus:</span>
+                <span className="text-[#D8F078] font-bold">{w.surplusKg} kg</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Dish-Level Waste Diagnostics Table */}
+      <div className="glass-panel p-8 rounded-3xl border border-[#28312B] space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-[#28312B]">
+          <div>
+            <h3 className="text-lg font-bold text-[#F7F5EF]">Dish-Level Preparation & Waste Breakdown</h3>
+            <p className="text-xs text-[#A9B7A0]">Identifies specific menu recipes contributing to plate discard vs. kitchen surplus.</p>
+          </div>
+          <span className="text-xs font-mono text-[#A9B7A0]">Shift: Today's Lunch</span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="border-b border-[#28312B] text-[#A9B7A0] font-mono uppercase text-[10px]">
+              <tr>
+                <th className="pb-3 font-semibold">Dish Item</th>
+                <th className="pb-3 font-semibold">Prepared</th>
+                <th className="pb-3 font-semibold">Consumed</th>
+                <th className="pb-3 font-semibold">Plate Waste</th>
+                <th className="pb-3 font-semibold">Edible Surplus</th>
+                <th className="pb-3 font-semibold text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#28312B]/60 font-mono">
+              {dishWasteRows.map((row, idx) => (
+                <tr key={idx} className="hover:bg-[#151916]/40 transition-colors">
+                  <td className="py-3.5 font-sans font-bold text-[#F7F5EF]">{row.name}</td>
+                  <td className="py-3.5 text-[#A9B7A0]">{row.preparedKg} kg</td>
+                  <td className="py-3.5 text-[#F7F5EF] font-semibold">{row.consumedKg} kg</td>
+                  <td className="py-3.5 text-red-300">{row.plateWasteKg} kg</td>
+                  <td className="py-3.5 text-[#D8F078]">{row.surplusKg} kg</td>
+                  <td className="py-3.5 text-right">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] ${
+                      row.status === 'Optimal'
+                        ? 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30'
+                        : row.status === 'Normal'
+                        ? 'bg-[#1C221E] text-[#A9B7A0] border border-[#28312B]'
+                        : 'bg-amber-950/70 text-amber-300 border border-amber-500/30'
+                    }`}>
+                      {row.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Safety Buffer Override Slide-Over Modal */}
       {isOverrideOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-[#1C221E] border border-[#28312B] rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-[#28312B]">
-              <h3 className="text-base font-bold text-[#F7F5EF]">Configure Production Safety Buffer</h3>
-              <button onClick={() => setIsOverrideOpen(false)} className="text-[#A9B7A0] hover:text-[#F7F5EF]">✕</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="glass-panel-elevated w-full max-w-md rounded-3xl p-6 sm:p-8 border border-[#D8F078]/30 space-y-6 shadow-2xl">
+            
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-[10px] font-mono text-[#D8F078] uppercase font-bold">Manager Override</span>
+                <h3 className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
+                  Adjust Safety Buffer
+                </h3>
+                <p className="text-xs text-[#A9B7A0]">Modifies AI batch cooking target. Requires mandatory audit justification.</p>
+              </div>
+              <button
+                onClick={() => setIsOverrideOpen(false)}
+                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF]"
+              >
+                ✕
+              </button>
             </div>
 
-            <form onSubmit={handleApplyBufferOverride} className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between text-xs font-mono text-[#A9B7A0] mb-2">
-                  <span>Safety Buffer Percentage:</span>
-                  <span className="text-sm font-bold text-[#D8F078]">+{safetyBuffer}%</span>
+            <form onSubmit={handleApplyBufferOverride} className="space-y-5">
+              
+              {/* Buffer Slider */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono text-[#A9B7A0]">Buffer Percentage:</span>
+                  <span className="text-lg font-mono font-bold text-[#D8F078]">{safetyBuffer}%</span>
                 </div>
                 <input
                   type="range"
-                  min={0}
-                  max={20}
-                  step={0.5}
+                  min="0"
+                  max="20"
+                  step="0.5"
                   value={safetyBuffer}
                   onChange={(e) => setSafetyBuffer(Number(e.target.value))}
-                  className="w-full h-2 bg-[#28312B] rounded-lg appearance-none cursor-pointer accent-[#D8F078]"
+                  className="w-full accent-[#D8F078] bg-[#1C221E] h-2 rounded-lg cursor-pointer"
                 />
+                <div className="flex justify-between text-[10px] font-mono text-[#A9B7A0]">
+                  <span>0% (Lean)</span>
+                  <span>10% (Balanced)</span>
+                  <span>20% (Conservative)</span>
+                </div>
               </div>
 
-              <div>
-                <label className="text-xs font-mono text-[#A9B7A0] block mb-1.5">
-                  Mandatory Audit Justification:
+              {/* Live Target Impact */}
+              <div className="p-4 rounded-2xl bg-[#151916] border border-[#28312B] flex items-center justify-between text-xs font-mono">
+                <span className="text-[#A9B7A0]">Updated Batch Target:</span>
+                <span className="text-[#D8F078] font-bold">
+                  {(prediction.baselineKg * (1 + safetyBuffer / 100)).toFixed(1)} kg
+                </span>
+              </div>
+
+              {/* Mandatory Reason */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono text-[#A9B7A0]">
+                  Mandatory Justification for Audit Record:
                 </label>
                 <textarea
-                  rows={3}
                   value={overrideReason}
                   onChange={(e) => setOverrideReason(e.target.value)}
-                  placeholder="e.g. Higher attendance expected due to regional sports meet in hostel grounds..."
-                  className="w-full bg-[#151916] border border-[#28312B] rounded-xl p-3 text-xs text-[#F7F5EF] focus:outline-none"
+                  placeholder="e.g. Host block athletic tournament tonight expecting +12% diner intake."
+                  rows={3}
+                  className="w-full p-3.5 rounded-2xl bg-[#151916] border border-[#28312B] focus:border-[#D8F078] text-xs text-[#F7F5EF] focus:outline-none"
                   required
                 />
-                <span className="text-[10px] text-[#A9B7A0]">This justification is permanently stored in the audit trail.</span>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsOverrideOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#A9B7A0] hover:bg-[#28312B]"
+                  className="flex-1 py-3 rounded-xl text-xs font-semibold bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF] border border-[#28312B]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl text-xs font-semibold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D]"
+                  className="flex-1 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95"
                 >
-                  Save Buffer & Log
+                  <FileCheck className="w-3.5 h-3.5" />
+                  <span>Log & Apply Override</span>
                 </button>
               </div>
+
             </form>
+
           </div>
         </div>
       )}

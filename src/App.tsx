@@ -59,14 +59,16 @@ export const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#151916] text-[#F7F5EF] selection:bg-[#D8F078] selection:text-[#151916] relative">
       
-      {/* Top Navbar */}
-      <Navbar
-        onSelectRole={handleSelectRole}
-        activeView={activeView}
-        currentRole={currentRole}
-        onNavigateHome={handleReturnHome}
-        onOpenAssetManifest={() => setIsAssetManifestOpen(true)}
-      />
+      {/* Top Navbar for Landing View Only */}
+      {activeView === 'landing' && (
+        <Navbar
+          onSelectRole={handleSelectRole}
+          activeView={activeView}
+          currentRole={currentRole}
+          onNavigateHome={handleReturnHome}
+          onOpenAssetManifest={() => setIsAssetManifestOpen(true)}
+        />
+      )}
 
       {/* View Switcher: Landing Page vs Active Application Portal */}
       {activeView === 'landing' ? (
