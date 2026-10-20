@@ -54,7 +54,7 @@ class SurplusDonation(Base):
         CheckConstraint("total_quantity_kg > 0", name="ck_donation_positive_quantity"),
         CheckConstraint("servings_count > 0", name="ck_donation_positive_servings"),
         # Strict food safety policy: plate leftovers are barred from redistribution
-        CheckConstraint("is_plate_leftover = 0 OR is_plate_leftover = false", name="ck_never_plate_leftover"),
+        CheckConstraint("NOT is_plate_leftover", name="ck_never_plate_leftover"),
     )
 
     def __repr__(self) -> str:

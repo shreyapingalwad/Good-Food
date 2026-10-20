@@ -144,7 +144,7 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
         sa.CheckConstraint("total_quantity_kg > 0", name="ck_donation_positive_quantity"),
         sa.CheckConstraint("servings_count > 0", name="ck_donation_positive_servings"),
-        sa.CheckConstraint("is_plate_leftover = 0 OR is_plate_leftover = false", name="ck_never_plate_leftover"),
+        sa.CheckConstraint("NOT is_plate_leftover", name="ck_never_plate_leftover"),
     )
     op.create_index("ix_surplus_donations_status", "surplus_donations", ["status"], unique=False)
     op.create_index("ix_surplus_donations_claimed_by_ngo_id", "surplus_donations", ["claimed_by_ngo_id"], unique=False)
