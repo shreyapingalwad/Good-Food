@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { storageService, SEED_MENUS } from '../../services/storageService';
-import { DayMenu, MenuItem, MealType } from '../../types';
+import { MenuItem, MealType } from '../../types';
 import { 
   Calendar, 
   Clock, 
@@ -8,7 +8,6 @@ import {
   XCircle, 
   Star, 
   Leaf, 
-  AlertCircle, 
   Award, 
   Send,
   MessageSquare
@@ -80,7 +79,7 @@ export const StudentPortal: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
         <div className="glass-panel p-5 rounded-2xl border border-[#28312B] flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#123B2A] border border-[#D8F078]/30 flex items-center justify-center text-[#D8F078] font-bold text-lg">
+          <div className="w-12 h-12 rounded-2xl bg-[#123B2A] border border-[#D8F078]/30 flex items-center justify-center text-[#D8F078] font-bold text-lg shadow-sm">
             SP
           </div>
           <div>
@@ -98,7 +97,9 @@ export const StudentPortal: React.FC = () => {
             <div className="text-2xl font-bold font-editorial text-[#D8F078] mt-0.5">94.8%</div>
             <p className="text-[11px] text-[#A9B7A0]">Opt-in accuracy this semester</p>
           </div>
-          <Award className="w-8 h-8 text-[#D8F078]" />
+          <div className="w-12 h-12 rounded-2xl bg-[#1C221E] border border-[#28312B] flex items-center justify-center text-[#D8F078]">
+            <Award className="w-6 h-6" />
+          </div>
         </div>
 
         <div className="glass-panel p-5 rounded-2xl border border-[#28312B] flex items-center justify-between">
@@ -107,7 +108,9 @@ export const StudentPortal: React.FC = () => {
             <div className="text-2xl font-bold font-editorial text-[#F7F5EF] mt-0.5">14.2 kg</div>
             <p className="text-[11px] text-[#A9B7A0]">Prevented via timely opt-outs</p>
           </div>
-          <Leaf className="w-8 h-8 text-[#D8F078]" />
+          <div className="w-12 h-12 rounded-2xl bg-[#123B2A] border border-[#D8F078]/25 flex items-center justify-center text-[#D8F078]">
+            <Leaf className="w-6 h-6" />
+          </div>
         </div>
 
       </div>
@@ -127,7 +130,7 @@ export const StudentPortal: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {(['Breakfast', 'Lunch', 'Snacks', 'Dinner'] as MealType[]).map((meal) => {
             const isAttending = attendance[meal] ?? true;
-            const isCutoff = meal === 'Breakfast'; // demo Breakfast already passed
+            const isCutoff = meal === 'Breakfast';
             return (
               <div 
                 key={meal}
@@ -180,7 +183,7 @@ export const StudentPortal: React.FC = () => {
         </div>
       </div>
 
-      {/* Today's Menu & Dish Rating Board */}
+      {/* Today's Menu & Photographic Dish Card Grid */}
       <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-[#28312B] space-y-6">
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#28312B]">
@@ -198,9 +201,9 @@ export const StudentPortal: React.FC = () => {
               <button
                 key={m}
                 onClick={() => setSelectedMeal(m)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   selectedMeal === m
-                    ? 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30'
+                    ? 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30 shadow-sm'
                     : 'text-[#A9B7A0] hover:text-[#F7F5EF]'
                 }`}
               >
@@ -210,52 +213,68 @@ export const StudentPortal: React.FC = () => {
           </div>
         </div>
 
-        {/* Menu Items Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Photographic Menu Items Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {currentMenu.items.map((item) => (
             <div 
               key={item.id}
-              className="p-5 rounded-2xl bg-[#151916] border border-[#28312B] hover:border-[#D8F078]/30 transition-all flex flex-col justify-between"
+              className="glass-panel rounded-3xl border border-[#28312B] hover:border-[#D8F078]/40 transition-all duration-300 flex flex-col justify-between overflow-hidden group food-card-hover"
             >
-              <div>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#1C221E] text-[#D8F078] border border-[#D8F078]/20">
-                      {item.category}
-                    </span>
-                    <h4 className="text-base font-bold text-[#F7F5EF] mt-1.5">{item.name}</h4>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="text-xs font-mono font-bold text-[#D8F078] flex items-center gap-1">
-                      <Star className="w-3.5 h-3.5 fill-current" />
-                      <span>{item.avgRating.toFixed(1)}</span>
-                    </span>
-                    <span className="text-[10px] text-[#A9B7A0] block">({item.totalRatings} ratings)</span>
-                  </div>
+              {/* Dish Image */}
+              <div className="h-48 w-full relative overflow-hidden">
+                <img 
+                  src={item.imageUrl} 
+                  alt={item.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-95"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1C221E] via-transparent to-transparent opacity-80" />
+                
+                {/* Category Pill */}
+                <div className="absolute top-3 left-3">
+                  <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-[#151916]/80 backdrop-blur-md text-[#D8F078] border border-[#D8F078]/30">
+                    {item.category}
+                  </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 text-xs text-[#A9B7A0] my-3">
-                  <span>Portion: <strong className="text-[#F7F5EF] font-mono">{item.portionGrams}g</strong></span>
-                  <span>•</span>
-                  <span>Eco-Score: <strong className="text-[#D8F078] font-mono">{item.sustainabilityScore}/10</strong></span>
-                  {item.allergens.length > 0 && (
-                    <>
-                      <span>•</span>
-                      <span className="text-amber-300">Contains: {item.allergens.join(', ')}</span>
-                    </>
-                  )}
+                {/* Rating Badge */}
+                <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#151916]/80 backdrop-blur-md border border-[#28312B]">
+                  <Star className="w-3.5 h-3.5 text-[#D8F078] fill-current" />
+                  <span className="text-xs font-mono font-bold text-[#F7F5EF]">{item.avgRating.toFixed(1)}</span>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#28312B] flex items-center justify-between">
-                <span className="text-[11px] text-[#A9B7A0]">Did you enjoy this dish?</span>
-                <button
-                  onClick={() => handleOpenRating(item)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1C221E] hover:bg-[#28312B] text-[#D8F078] border border-[#28312B] flex items-center gap-1.5 transition-colors"
-                >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>Rate Dish</span>
-                </button>
+              <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div>
+                  <h4 className="text-base font-bold text-[#F7F5EF] group-hover:text-[#D8F078] transition-colors">
+                    {item.name}
+                  </h4>
+                  <p className="text-xs text-[#A9B7A0] mt-1 line-clamp-2 leading-relaxed">
+                    {item.description}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#A9B7A0] mt-3">
+                    <span className="font-mono text-[#F7F5EF]">{item.portionGrams}g</span>
+                    <span>•</span>
+                    <span className="text-[#D8F078] font-mono font-bold">Eco: {item.sustainabilityScore}/10</span>
+                    {item.allergens.length > 0 && (
+                      <>
+                        <span>•</span>
+                        <span className="text-amber-300 text-[11px]">Contains: {item.allergens.join(', ')}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-[#28312B] flex items-center justify-between">
+                  <span className="text-[11px] text-[#A9B7A0] font-mono">({item.totalRatings} ratings)</span>
+                  <button
+                    onClick={() => handleOpenRating(item)}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#1C221E] hover:bg-[#123B2A] text-[#D8F078] border border-[#28312B] hover:border-[#D8F078]/40 flex items-center gap-1.5 transition-colors"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Rate Dish</span>
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -268,7 +287,17 @@ export const StudentPortal: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-[#1C221E] border border-[#28312B] rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-[#28312B]">
-              <h3 className="text-base font-bold text-[#F7F5EF]">Rate {ratingModalItem.name}</h3>
+              <div className="flex items-center gap-3">
+                <img 
+                  src={ratingModalItem.imageUrl} 
+                  alt={ratingModalItem.name} 
+                  className="w-10 h-10 rounded-xl object-cover"
+                />
+                <div>
+                  <h3 className="text-sm font-bold text-[#F7F5EF]">Rate {ratingModalItem.name}</h3>
+                  <span className="text-[10px] text-[#A9B7A0]">{ratingModalItem.category} • {ratingModalItem.portionGrams}g</span>
+                </div>
+              </div>
               <button 
                 onClick={() => setRatingModalItem(null)}
                 className="text-[#A9B7A0] hover:text-[#F7F5EF]"

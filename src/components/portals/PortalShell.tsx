@@ -6,10 +6,7 @@ import {
   LayoutDashboard, 
   HeartHandshake, 
   ShieldCheck, 
-  Home, 
-  ArrowLeft,
-  Bell,
-  Sparkles
+  ArrowLeft
 } from 'lucide-react';
 
 interface PortalShellProps {
@@ -70,24 +67,24 @@ export const PortalShell: React.FC<PortalShellProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-[#151916] text-[#F7F5EF] flex flex-col pt-20">
+    <div className="min-h-screen bg-[#151916] text-[#F7F5EF] flex flex-col pt-16">
       
-      {/* Top Application Ribbon */}
-      <div className="bg-[#1C221E] border-b border-[#28312B] sticky top-16 z-30">
+      {/* Consolidated Single Application Ribbon */}
+      <div className="bg-[#1C221E]/90 backdrop-blur-xl border-b border-[#28312B] sticky top-16 z-30 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             
-            {/* Left: Role identity */}
+            {/* Left: Role identity & back button */}
             <div className="flex items-center gap-3">
               <button
                 onClick={onReturnHome}
                 className="p-2 rounded-xl bg-[#151916] border border-[#28312B] hover:border-[#D8F078]/40 hover:text-[#D8F078] text-[#A9B7A0] transition-colors"
-                title="Return to Marketing Overview"
+                title="Return to Overview"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
 
-              <div className="w-9 h-9 rounded-xl bg-[#123B2A] border border-[#D8F078]/30 flex items-center justify-center text-[#D8F078]">
+              <div className="w-9 h-9 rounded-xl bg-[#123B2A] border border-[#D8F078]/40 flex items-center justify-center text-[#D8F078] shadow-sm">
                 <CurrentIcon className="w-5 h-5" />
               </div>
 
@@ -97,7 +94,7 @@ export const PortalShell: React.FC<PortalShellProps> = ({
                     {meta.title}
                   </h1>
                   <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/25">
-                    Live Demo
+                    Live Session
                   </span>
                 </div>
                 <p className="text-xs text-[#A9B7A0] hidden md:block">
@@ -106,7 +103,7 @@ export const PortalShell: React.FC<PortalShellProps> = ({
               </div>
             </div>
 
-            {/* Right: Quick Role Switcher Pills */}
+            {/* Right: Role Switcher Tabs */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
               {roles.map((r) => {
                 const Icon = r.icon;
@@ -117,7 +114,7 @@ export const PortalShell: React.FC<PortalShellProps> = ({
                     onClick={() => onSelectRole(r.id)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                       isActive
-                        ? 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/40 shadow-sm'
+                        ? 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/40 shadow-glow-lime'
                         : 'bg-[#151916] text-[#A9B7A0] border border-[#28312B] hover:text-[#F7F5EF] hover:border-[#A9B7A0]/30'
                     }`}
                   >

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Thermometer, Clock, Lock, CheckCircle, AlertTriangle, ArrowRight, Truck } from 'lucide-react';
+import { ShieldCheck, Thermometer, Clock, Lock, CheckCircle, AlertTriangle, Truck } from 'lucide-react';
 
 export const RedistributionStory: React.FC = () => {
   const [secondsRemaining, setSecondsRemaining] = useState<number>(4500); // 75 mins
@@ -24,7 +24,8 @@ export const RedistributionStory: React.FC = () => {
       badge: 'Zero Plate Leftovers',
       desc: 'Only unserved kitchen gastro-trays that never left the culinary prep area qualify. Customer plate scrapes are barred by system validation and directed to composting.',
       icon: ShieldCheck,
-      status: 'Passed Check'
+      status: 'Passed Check',
+      imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80'
     },
     {
       num: '02',
@@ -32,7 +33,8 @@ export const RedistributionStory: React.FC = () => {
       badge: '>= 60°C or <= 5°C',
       desc: 'Digital probe temperature is recorded at dispatch. Food in the danger zone (8°C to 59°C) is flagged and locked from distribution to prevent bacterial growth.',
       icon: Thermometer,
-      status: '68.5°C Verified'
+      status: '68.5°C Verified',
+      imageUrl: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=600&q=80'
     },
     {
       num: '03',
@@ -40,7 +42,8 @@ export const RedistributionStory: React.FC = () => {
       badge: 'Race-Condition Proof',
       desc: 'When an authorized NGO claims a surplus offer, an atomic database lock assigns the donation. Multiple partners never drive out for the same batch.',
       icon: Lock,
-      status: 'Locked to Robin Hood Army'
+      status: 'Locked to Robin Hood Army',
+      imageUrl: 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=600&q=80'
     },
     {
       num: '04',
@@ -48,7 +51,8 @@ export const RedistributionStory: React.FC = () => {
       badge: 'Dual Confirmation',
       desc: 'Driver presents an encrypted 4-digit token at Gate 3. Both kitchen staff and driver confirm physical handover, creating an immutable compliance record.',
       icon: CheckCircle,
-      status: 'PIN #4829 Verified'
+      status: 'PIN #4829 Verified',
+      imageUrl: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=600&q=80'
     }
   ];
 
@@ -73,71 +77,95 @@ export const RedistributionStory: React.FC = () => {
           </p>
         </div>
 
-        {/* Live Active Countdown Simulation Banner */}
-        <div className="mb-12 p-6 sm:p-8 rounded-3xl bg-[#1C221E] border border-[#D8F078]/30 shadow-card-dark flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#123B2A] border border-[#D8F078]/40 flex items-center justify-center text-[#D8F078] shrink-0">
-              <Truck className="w-7 h-7" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <span className="text-xs font-mono font-bold text-[#D8F078] uppercase">Active Safe Dispatch #DON-8841</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#123B2A] text-[#F7F5EF]">Gate 3 Cold Bay</span>
-              </div>
-              <h3 className="text-lg font-bold text-[#F7F5EF] mt-0.5">
-                45.0 kg Steamed Basmati Rice & Paneer Curry (110 Servings)
-              </h3>
-              <p className="text-xs text-[#A9B7A0]">Assigned to: Robin Hood Army (South Campus Wing)</p>
-            </div>
+        {/* Live Active Countdown Simulation Banner with Imagery */}
+        <div className="mb-12 relative rounded-3xl overflow-hidden border border-[#D8F078]/30 shadow-card-dark">
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80" 
+              alt="Community distribution van" 
+              className="w-full h-full object-cover filter brightness-50 contrast-125 opacity-30"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1C221E] via-[#1C221E]/95 to-[#1C221E]/80" />
           </div>
 
-          {/* Countdown Clock */}
-          <div className="flex items-center gap-3 bg-[#151916] px-5 py-3 rounded-2xl border border-[#28312B] shrink-0">
-            <Clock className="w-5 h-5 text-[#D8F078] animate-pulse" />
-            <div>
-              <span className="text-[10px] font-mono uppercase text-[#A9B7A0] block">Safety Window Remaining:</span>
-              <span className="text-xl font-mono font-bold text-[#D8F078]">
-                {formatTime(secondsRemaining)}
-              </span>
+          <div className="relative z-10 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-[#123B2A] border border-[#D8F078]/40 flex items-center justify-center text-[#D8F078] shrink-0 shadow-glow-lime">
+                <Truck className="w-7 h-7" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xs font-mono font-bold text-[#D8F078] uppercase">Active Safe Dispatch #DON-8841</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#123B2A] text-[#F7F5EF]">Gate 3 Cold Bay</span>
+                </div>
+                <h3 className="text-lg font-bold text-[#F7F5EF] mt-0.5">
+                  45.0 kg Steamed Basmati Rice & Paneer Curry (110 Servings)
+                </h3>
+                <p className="text-xs text-[#A9B7A0]">Assigned to: Robin Hood Army (South Campus Wing)</p>
+              </div>
+            </div>
+
+            {/* Countdown Clock */}
+            <div className="flex items-center gap-3 bg-[#151916]/90 backdrop-blur-md px-5 py-3 rounded-2xl border border-[#D8F078]/30 shrink-0 shadow-lg">
+              <Clock className="w-5 h-5 text-[#D8F078] animate-pulse" />
+              <div>
+                <span className="text-[10px] font-mono uppercase text-[#A9B7A0] block">Safety Window Remaining:</span>
+                <span className="text-xl font-mono font-bold text-[#D8F078]">
+                  {formatTime(secondsRemaining)}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 4 Protocol Steps Grid */}
+        {/* 4 Protocol Steps Grid with Photos */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {steps.map((st, idx) => {
             const Icon = st.icon;
             return (
               <div 
                 key={idx}
-                className="glass-panel p-6 rounded-3xl border border-[#28312B] hover:border-[#D8F078]/40 transition-all duration-300 flex flex-col justify-between"
+                className="glass-panel rounded-3xl border border-[#28312B] hover:border-[#D8F078]/40 transition-all duration-300 flex flex-col justify-between overflow-hidden group"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-mono font-bold text-[#D8F078]">
+                {/* Photo Thumbnail */}
+                <div className="h-36 w-full relative overflow-hidden">
+                  <img 
+                    src={st.imageUrl} 
+                    alt={st.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C221E] via-transparent to-transparent opacity-80" />
+                  <div className="absolute top-3 left-3">
+                    <span className="text-[10px] font-mono font-bold text-[#151916] px-2.5 py-1 rounded-full bg-[#D8F078] shadow-sm">
                       STEP {st.num}
                     </span>
-                    <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/20">
-                      {st.badge}
-                    </span>
                   </div>
-
-                  <div className="w-10 h-10 rounded-xl bg-[#1C221E] border border-[#28312B] flex items-center justify-center text-[#F7F5EF] mb-4">
-                    <Icon className="w-5 h-5 text-[#D8F078]" />
-                  </div>
-
-                  <h4 className="text-base font-bold text-[#F7F5EF] mb-2">
-                    {st.title}
-                  </h4>
-
-                  <p className="text-xs text-[#A9B7A0] leading-relaxed">
-                    {st.desc}
-                  </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-[#28312B] flex items-center gap-2 text-xs font-mono text-[#D8F078]">
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  <span>{st.status}</span>
+                <div className="p-6 pt-3 flex-1 flex flex-col justify-between space-y-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-7 h-7 rounded-lg bg-[#123B2A] border border-[#D8F078]/30 flex items-center justify-center text-[#D8F078]">
+                        <Icon className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#151916] text-[#A9B7A0] border border-[#28312B]">
+                        {st.badge}
+                      </span>
+                    </div>
+
+                    <h4 className="text-base font-bold text-[#F7F5EF] mb-1.5">
+                      {st.title}
+                    </h4>
+
+                    <p className="text-xs text-[#A9B7A0] leading-relaxed">
+                      {st.desc}
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-[#28312B] flex items-center gap-2 text-xs font-mono text-[#D8F078]">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>{st.status}</span>
+                  </div>
                 </div>
               </div>
             );

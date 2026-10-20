@@ -8,10 +8,7 @@ import {
   Send, 
   AlertTriangle, 
   CheckCircle2, 
-  Thermometer, 
-  Clock, 
   Plus, 
-  ShieldAlert,
   Flame,
   Truck
 } from 'lucide-react';
@@ -56,7 +53,8 @@ export const KitchenPortal: React.FC = () => {
       consumedKg: Number(consumedKg),
       kitchenSurplusKg: Number(kitchenSurplusKg),
       plateWasteKg: Number(plateWasteKg),
-      recordedBy: 'Chef Rajesh Kumar'
+      recordedBy: 'Chef Rajesh Kumar',
+      imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80'
     });
 
     setLogs([newLog, ...logs]);
@@ -79,7 +77,8 @@ export const KitchenPortal: React.FC = () => {
       expiryDeadline: new Date(Date.now() + 105 * 60 * 1000).toISOString(),
       kitchenFacility: 'Grand Central Mess - Block B',
       pickupLocation: 'Kitchen Dispatch Gate 3',
-      beneficiaryTarget: 'Verified Local Shelter Partners'
+      beneficiaryTarget: 'Verified Local Shelter Partners',
+      imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80'
     });
 
     if (!result.success) {
@@ -97,7 +96,7 @@ export const KitchenPortal: React.FC = () => {
       
       {/* Toast Alert */}
       {notification && (
-        <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between ${
+        <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between shadow-2xl ${
           notification.type === 'success'
             ? 'bg-[#123B2A] border-[#D8F078]/40 text-[#D8F078] shadow-glow-lime'
             : 'bg-red-950/80 border-red-500/40 text-red-200'
@@ -113,46 +112,57 @@ export const KitchenPortal: React.FC = () => {
         </div>
       )}
 
-      {/* Headcount & AI Recommendation Banner */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        
-        <div className="glass-panel p-5 rounded-2xl border border-[#28312B] space-y-1">
-          <div className="flex items-center justify-between text-xs font-mono text-[#A9B7A0]">
-            <span>Active Headcount</span>
-            <Users className="w-4 h-4 text-[#D8F078]" />
+      {/* Culinary Workbench Hero Banner with Commercial Kitchen Photography */}
+      <div className="relative rounded-3xl overflow-hidden border border-[#28312B] shadow-2xl">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=1200&q=80" 
+            alt="Commercial kitchen" 
+            className="w-full h-full object-cover filter brightness-40 contrast-125 opacity-35"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#151916] via-[#1C221E]/90 to-transparent" />
+        </div>
+
+        <div className="relative z-10 p-6 sm:p-8 grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+          
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs font-mono text-[#A9B7A0]">
+              <span>Active Headcount</span>
+              <Users className="w-4 h-4 text-[#D8F078]" />
+            </div>
+            <div className="text-3xl font-bold font-editorial text-[#F7F5EF]">1,450 Diners</div>
+            <p className="text-[11px] text-[#D8F078] font-mono">Confirmed student opt-ins</p>
           </div>
-          <div className="text-2xl font-bold font-editorial text-[#F7F5EF]">1,450 Diners</div>
-          <p className="text-[11px] text-[#D8F078] font-mono">Confirmed via student opt-ins</p>
-        </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-[#28312B] space-y-1">
-          <div className="flex items-center justify-between text-xs font-mono text-[#A9B7A0]">
-            <span>AI Target Batch</span>
-            <Scale className="w-4 h-4 text-[#D8F078]" />
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs font-mono text-[#A9B7A0]">
+              <span>AI Target Batch</span>
+              <Scale className="w-4 h-4 text-[#D8F078]" />
+            </div>
+            <div className="text-3xl font-bold font-editorial text-[#D8F078]">580.0 kg</div>
+            <p className="text-[11px] text-[#A9B7A0]">5 Lunch items (Safety buffer: 5%)</p>
           </div>
-          <div className="text-2xl font-bold font-editorial text-[#D8F078]">580.0 kg</div>
-          <p className="text-[11px] text-[#A9B7A0]">Across 5 lunch items (buffer: 5%)</p>
-        </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-[#28312B] space-y-1">
-          <div className="flex items-center justify-between text-xs font-mono text-[#A9B7A0]">
-            <span>Safe Surplus Offers</span>
-            <Truck className="w-4 h-4 text-[#D8F078]" />
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs font-mono text-[#A9B7A0]">
+              <span>Safe Surplus Offers</span>
+              <Truck className="w-4 h-4 text-[#D8F078]" />
+            </div>
+            <div className="text-3xl font-bold font-editorial text-[#F7F5EF]">{donations.filter(d => d.status === 'AVAILABLE').length} Available</div>
+            <p className="text-[11px] text-[#A9B7A0]">Broadcast to NGO network</p>
           </div>
-          <div className="text-2xl font-bold font-editorial text-[#F7F5EF]">{donations.filter(d => d.status === 'AVAILABLE').length} Available</div>
-          <p className="text-[11px] text-[#A9B7A0]">Broadcast to NGO network</p>
-        </div>
 
-        <div className="glass-panel p-5 rounded-2xl border border-[#28312B] flex items-center justify-center">
-          <button
-            onClick={() => setIsSurplusModalOpen(true)}
-            className="w-full h-full py-3 px-4 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] transition-all flex items-center justify-center gap-2 shadow-glow-lime"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Raise Surplus Alert</span>
-          </button>
-        </div>
+          <div className="flex items-center justify-center">
+            <button
+              onClick={() => setIsSurplusModalOpen(true)}
+              className="w-full py-4 px-5 rounded-2xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] transition-all flex items-center justify-center gap-2.5 shadow-glow-lime active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Raise Surplus Alert</span>
+            </button>
+          </div>
 
+        </div>
       </div>
 
       {/* Production & Weighing Logging Form */}
@@ -249,7 +259,7 @@ export const KitchenPortal: React.FC = () => {
           <div className="md:col-span-2 flex items-end">
             <button
               type="submit"
-              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] transition-colors flex items-center justify-center gap-2 shadow-sm"
             >
               <Send className="w-3.5 h-3.5" />
               <span>Log Shift Batch Metrics</span>
@@ -259,7 +269,7 @@ export const KitchenPortal: React.FC = () => {
         </form>
       </div>
 
-      {/* Active Surplus Offers & Handover Status */}
+      {/* Active Surplus Offers & Handover Status with Photography */}
       <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-[#28312B] space-y-6">
         <div className="flex items-center justify-between pb-4 border-b border-[#28312B]">
           <h3 className="text-base font-bold text-[#F7F5EF] flex items-center gap-2">
@@ -271,32 +281,41 @@ export const KitchenPortal: React.FC = () => {
           </span>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {donations.map((d) => (
             <div 
               key={d.id}
-              className="p-4 rounded-2xl bg-[#151916] border border-[#28312B] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+              className="p-5 rounded-2xl bg-[#151916] border border-[#28312B] hover:border-[#D8F078]/30 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
-              <div className="space-y-1">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-xs font-mono font-bold text-[#D8F078]">#{d.id}</span>
-                  <span className="text-sm font-bold text-[#F7F5EF]">{d.foodTitle}</span>
-                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                    d.status === 'AVAILABLE' 
-                      ? 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/25' 
-                      : d.status === 'CLAIMED'
-                        ? 'bg-amber-950/40 text-amber-300 border border-amber-500/30'
-                        : 'bg-[#1C221E] text-[#A9B7A0]'
-                  }`}>
-                    {d.status}
-                  </span>
-                </div>
-                <div className="text-xs text-[#A9B7A0] flex flex-wrap items-center gap-3">
-                  <span>Quantity: <strong className="text-[#F7F5EF] font-mono">{d.totalQuantityKg} kg</strong> (~{d.servingsCount} portions)</span>
-                  <span>•</span>
-                  <span>Core Temp: <strong className="text-[#D8F078] font-mono">{d.temperatureAtPackaging}°C</strong></span>
-                  <span>•</span>
-                  <span>Pickup Location: <strong>{d.pickupLocation}</strong></span>
+              <div className="flex items-center gap-4">
+                {d.imageUrl && (
+                  <img 
+                    src={d.imageUrl} 
+                    alt={d.foodTitle} 
+                    className="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#28312B]"
+                  />
+                )}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-xs font-mono font-bold text-[#D8F078]">#{d.id}</span>
+                    <span className="text-sm font-bold text-[#F7F5EF]">{d.foodTitle}</span>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                      d.status === 'AVAILABLE' 
+                        ? 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/25' 
+                        : d.status === 'CLAIMED'
+                          ? 'bg-amber-950/40 text-amber-300 border border-amber-500/30'
+                          : 'bg-[#1C221E] text-[#A9B7A0]'
+                    }`}>
+                      {d.status}
+                    </span>
+                  </div>
+                  <div className="text-xs text-[#A9B7A0] flex flex-wrap items-center gap-3">
+                    <span>Quantity: <strong className="text-[#F7F5EF] font-mono">{d.totalQuantityKg} kg</strong> (~{d.servingsCount} portions)</span>
+                    <span>•</span>
+                    <span>Core Temp: <strong className="text-[#D8F078] font-mono">{d.temperatureAtPackaging}°C</strong></span>
+                    <span>•</span>
+                    <span>Pickup Location: <strong>{d.pickupLocation}</strong></span>
+                  </div>
                 </div>
               </div>
 

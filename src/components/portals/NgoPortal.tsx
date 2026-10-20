@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { storageService, SEED_NGOS } from '../../services/storageService';
 import { SurplusDonation, NgoPartner } from '../../types';
 import { 
   HeartHandshake, 
-  Clock, 
-  MapPin, 
-  Thermometer, 
   CheckCircle2, 
   AlertTriangle, 
   ShieldCheck, 
@@ -18,7 +15,7 @@ import {
 
 export const NgoPortal: React.FC = () => {
   const [donations, setDonations] = useState<SurplusDonation[]>(storageService.getDonations());
-  const [selectedNgo, setSelectedNgo] = useState<NgoPartner>(SEED_NGOS[0]);
+  const [selectedNgo] = useState<NgoPartner>(SEED_NGOS[0]);
   const [claimStatus, setClaimStatus] = useState<{ message: string; isError: boolean } | null>(null);
 
   // Handover PIN state
@@ -59,7 +56,6 @@ export const NgoPortal: React.FC = () => {
 
   const availableDonations = donations.filter(d => d.status === 'AVAILABLE');
   const claimedByMe = donations.filter(d => d.claimedByNgoId === selectedNgo.id && d.status === 'CLAIMED');
-  const completedByMe = donations.filter(d => d.claimedByNgoId === selectedNgo.id && d.status === 'COMPLETED');
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -82,7 +78,7 @@ export const NgoPortal: React.FC = () => {
         </div>
       )}
 
-      {/* NGO Identity & Telemetry Ribbon */}
+      {/* NGO Identity & Telemetry Ribbon with Distribution Photography */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
         <div className="glass-panel p-5 rounded-2xl border border-[#28312B] space-y-2">
@@ -108,7 +104,9 @@ export const NgoPortal: React.FC = () => {
             </div>
             <p className="text-[11px] text-[#A9B7A0]">Verified at Gate 3 with PIN</p>
           </div>
-          <Award className="w-8 h-8 text-[#D8F078]" />
+          <div className="w-12 h-12 rounded-2xl bg-[#1C221E] border border-[#28312B] flex items-center justify-center text-[#D8F078]">
+            <Award className="w-6 h-6" />
+          </div>
         </div>
 
         <div className="glass-panel p-5 rounded-2xl border border-[#28312B] flex items-center justify-between">
@@ -119,7 +117,9 @@ export const NgoPortal: React.FC = () => {
             </div>
             <p className="text-[11px] text-[#A9B7A0]">Dignified hot meals served</p>
           </div>
-          <HeartHandshake className="w-8 h-8 text-[#D8F078]" />
+          <div className="w-12 h-12 rounded-2xl bg-[#123B2A] border border-[#D8F078]/30 flex items-center justify-center text-[#D8F078]">
+            <HeartHandshake className="w-6 h-6" />
+          </div>
         </div>
 
       </div>
@@ -140,17 +140,26 @@ export const NgoPortal: React.FC = () => {
 
           {claimedByMe.map((d) => (
             <div key={d.id} className="p-5 rounded-2xl bg-[#151916] border border-[#28312B] flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-[#D8F078] font-bold">#{d.id}</span>
-                  <span className="text-base font-bold text-[#F7F5EF]">{d.foodTitle}</span>
-                </div>
-                <div className="text-xs text-[#A9B7A0] flex flex-wrap items-center gap-3">
-                  <span>Net: <strong className="text-[#F7F5EF] font-mono">{d.totalQuantityKg} kg</strong> (~{d.servingsCount} portions)</span>
-                  <span>•</span>
-                  <span>Holding Temp: <strong className="text-[#D8F078] font-mono">{d.temperatureAtPackaging}°C</strong></span>
-                  <span>•</span>
-                  <span>Location: <strong className="text-[#F7F5EF]">{d.pickupLocation}</strong></span>
+              <div className="flex items-center gap-4">
+                {d.imageUrl && (
+                  <img 
+                    src={d.imageUrl} 
+                    alt={d.foodTitle} 
+                    className="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#28312B]"
+                  />
+                )}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-[#D8F078] font-bold">#{d.id}</span>
+                    <span className="text-base font-bold text-[#F7F5EF]">{d.foodTitle}</span>
+                  </div>
+                  <div className="text-xs text-[#A9B7A0] flex flex-wrap items-center gap-3">
+                    <span>Net: <strong className="text-[#F7F5EF] font-mono">{d.totalQuantityKg} kg</strong> (~{d.servingsCount} portions)</span>
+                    <span>•</span>
+                    <span>Holding Temp: <strong className="text-[#D8F078] font-mono">{d.temperatureAtPackaging}°C</strong></span>
+                    <span>•</span>
+                    <span>Location: <strong className="text-[#F7F5EF]">{d.pickupLocation}</strong></span>
+                  </div>
                 </div>
               </div>
 
@@ -162,7 +171,7 @@ export const NgoPortal: React.FC = () => {
 
                 <button
                   onClick={() => setHandoverDonationId(d.id)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] flex items-center gap-1.5 transition-all shadow-glow-lime"
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] flex items-center gap-1.5 transition-all shadow-glow-lime active:scale-95"
                 >
                   <KeyRound className="w-4 h-4" />
                   <span>Verify Handover</span>
@@ -173,7 +182,7 @@ export const NgoPortal: React.FC = () => {
         </div>
       )}
 
-      {/* Section 2: Live Available Surplus Broadcast Board */}
+      {/* Section 2: Live Available Surplus Broadcast Board with Food Previews */}
       <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-[#28312B] space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#28312B]">
           <div>
@@ -195,51 +204,62 @@ export const NgoPortal: React.FC = () => {
             <p className="text-xs">New unserved batches are broadcast immediately following meal shift conclusions.</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {availableDonations.map((d) => (
               <div 
                 key={d.id}
-                className="p-6 rounded-2xl bg-[#151916] border border-[#28312B] hover:border-[#D8F078]/30 transition-all space-y-4"
+                className="glass-panel rounded-3xl border border-[#28312B] hover:border-[#D8F078]/40 transition-all duration-300 flex flex-col justify-between overflow-hidden group shadow-lg"
               >
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xs font-mono font-bold text-[#D8F078]">#{d.id}</span>
-                      <h4 className="text-base font-bold text-[#F7F5EF]">{d.foodTitle}</h4>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#123B2A] text-[#D8F078]">
-                        {d.mealType} Service
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#A9B7A0]">
-                      Facility: {d.kitchenFacility} — {d.pickupLocation}
+                {/* Dish Photo Header */}
+                <div className="h-44 w-full relative overflow-hidden">
+                  <img 
+                    src={d.imageUrl || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80'} 
+                    alt={d.foodTitle}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1C221E] via-transparent to-transparent opacity-85" />
+                  
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-[#151916]/80 backdrop-blur-md text-[#D8F078] border border-[#D8F078]/30">
+                      #{d.id}
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#123B2A] text-[#F7F5EF]">
+                      {d.mealType}
+                    </span>
+                  </div>
+
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs">
+                    <span className="font-mono text-[#D8F078] font-bold">~{d.servingsCount} Hot Meals</span>
+                    <span className="font-mono text-amber-300 text-[11px] bg-[#151916]/80 px-2 py-0.5 rounded-full">Core: {d.temperatureAtPackaging}°C</span>
+                  </div>
+                </div>
+
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div>
+                    <h4 className="text-base font-bold text-[#F7F5EF] group-hover:text-[#D8F078] transition-colors">
+                      {d.foodTitle}
+                    </h4>
+                    <p className="text-xs text-[#A9B7A0] mt-1">
+                      {d.kitchenFacility} — {d.pickupLocation}
+                    </p>
+                    <p className="text-[11px] text-[#D8F078] mt-1 font-mono">
+                      Target: {d.beneficiaryTarget}
                     </p>
                   </div>
 
-                  <button
-                    onClick={() => handleClaim(d.id)}
-                    className="px-5 py-2.5 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] flex items-center gap-2 transition-all shadow-glow-lime self-start active:scale-95 shrink-0"
-                  >
-                    <span>Claim Donation</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                  <div className="pt-3 border-t border-[#28312B] flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-mono text-[#A9B7A0] block">Surplus Weight:</span>
+                      <strong className="text-base font-bold font-editorial text-[#F7F5EF]">{d.totalQuantityKg} kg</strong>
+                    </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#28312B] text-xs">
-                  <div>
-                    <span className="text-[#A9B7A0] block text-[11px]">Net Weight:</span>
-                    <strong className="text-[#F7F5EF] font-mono text-sm">{d.totalQuantityKg} kg</strong>
-                  </div>
-                  <div>
-                    <span className="text-[#A9B7A0] block text-[11px]">Portion Equivalent:</span>
-                    <strong className="text-[#D8F078] font-mono text-sm">~{d.servingsCount} Meals</strong>
-                  </div>
-                  <div>
-                    <span className="text-[#A9B7A0] block text-[11px]">Packaging Temp:</span>
-                    <strong className="text-[#F7F5EF] font-mono text-sm">{d.temperatureAtPackaging}°C (Verified Hot)</strong>
-                  </div>
-                  <div>
-                    <span className="text-[#A9B7A0] block text-[11px]">Expiry Deadline:</span>
-                    <strong className="text-amber-300 font-mono text-sm">Within 90 mins</strong>
+                    <button
+                      onClick={() => handleClaim(d.id)}
+                      className="px-5 py-2.5 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] flex items-center gap-2 transition-all shadow-glow-lime active:scale-95"
+                    >
+                      <span>Claim Donation</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               </div>

@@ -40,8 +40,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-[#151916]/90 backdrop-blur-xl border-b border-[#28312B] py-3.5 shadow-2xl'
+        isScrolled || activeView === 'portal'
+          ? 'bg-[#151916]/95 backdrop-blur-xl border-b border-[#28312B] py-3 shadow-2xl'
           : 'bg-transparent py-5'
       }`}
     >
@@ -51,9 +51,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand Logo */}
           <button 
             onClick={onNavigateHome}
-            className="flex items-center gap-3.5 text-left group focus:outline-none"
+            className="flex items-center gap-3 text-left group focus:outline-none"
           >
-            <div className="w-10 h-10 rounded-xl bg-[#123B2A] border border-[#D8F078]/30 flex items-center justify-center text-[#D8F078] shadow-glow-lime group-hover:scale-105 transition-transform duration-300">
+            <div className="w-10 h-10 rounded-xl bg-[#123B2A] border border-[#D8F078]/40 flex items-center justify-center text-[#D8F078] shadow-glow-lime group-hover:scale-105 transition-transform duration-300">
               <Leaf className="w-5 h-5 text-[#D8F078]" />
             </div>
             <div>
@@ -61,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="font-editorial text-2xl font-bold tracking-tight text-[#F7F5EF] group-hover:text-[#D8F078] transition-colors">
                   MessSaver
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/20 hidden sm:inline-block">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/25 hidden sm:inline-block">
                   AI-V2
                 </span>
               </div>
@@ -98,90 +98,85 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </nav>
           ) : (
-            <div className="hidden lg:flex items-center gap-3">
-              <span className="text-xs font-mono text-[#A9B7A0]">Active Workspace:</span>
-              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30 uppercase tracking-wider">
-                {currentRole} Portal
+            <div className="hidden md:flex items-center gap-2">
+              <span className="text-xs font-mono text-[#A9B7A0]">Campus Network:</span>
+              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30">
+                Grand Central Mess — Active Shift
               </span>
-              <button 
-                onClick={onNavigateHome}
-                className="text-xs text-[#A9B7A0] hover:text-[#F7F5EF] underline underline-offset-4 ml-2"
-              >
-                Return to Overview
-              </button>
             </div>
           )}
 
           {/* Right Action: Launch App / Switch Portals */}
           <div className="flex items-center gap-3">
-            {/* Quick Portal Switcher Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#F7F5EF] bg-[#1C221E] border border-[#28312B] hover:border-[#D8F078]/40 hover:bg-[#1C221E]/80 transition-all duration-200"
-              >
-                <ShieldCheck className="w-4 h-4 text-[#D8F078]" />
-                <span className="hidden sm:inline">Role:</span>
-                <span className="capitalize text-[#D8F078] font-bold">{currentRole}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${roleDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {roleDropdownOpen && (
-                <div 
-                  className="absolute right-0 mt-2 w-72 rounded-2xl bg-[#1C221E] border border-[#28312B] p-2 shadow-2xl z-50 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150"
-                  onMouseLeave={() => setRoleDropdownOpen(false)}
-                >
-                  <div className="px-3 py-2 text-[11px] font-mono uppercase text-[#A9B7A0] border-b border-[#28312B]">
-                    Select Live Application Role:
-                  </div>
-                  <div className="mt-1 space-y-1">
-                    {rolesList.map((r) => (
-                      <button
-                        key={r.id}
-                        onClick={() => {
-                          onSelectRole(r.id);
-                          setRoleDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-3 py-2.5 rounded-xl transition-all duration-150 flex items-start gap-3 ${
-                          currentRole === r.id
-                            ? 'bg-[#123B2A] text-[#F7F5EF] border border-[#D8F078]/30'
-                            : 'hover:bg-[#28312B]/60 text-[#A9B7A0] hover:text-[#F7F5EF]'
-                        }`}
-                      >
-                        <span className="text-xl">{r.icon}</span>
-                        <div>
-                          <div className="text-xs font-bold flex items-center gap-1.5">
-                            {r.label}
-                            {currentRole === r.id && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#D8F078]" />
-                            )}
-                          </div>
-                          <div className="text-[11px] text-[#A9B7A0] leading-snug line-clamp-1 mt-0.5">
-                            {r.desc}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Main Action Button */}
             {activeView === 'landing' ? (
-              <button
-                onClick={() => onSelectRole('student')}
-                className="relative group overflow-hidden px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] transition-all duration-200 shadow-glow-lime flex items-center gap-2 active:scale-95"
-              >
-                <span>Launch App</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </button>
+              <>
+                {/* Role dropdown launcher */}
+                <div className="relative">
+                  <button
+                    onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#F7F5EF] bg-[#1C221E] border border-[#28312B] hover:border-[#D8F078]/40 hover:bg-[#1C221E]/80 transition-all duration-200"
+                  >
+                    <ShieldCheck className="w-4 h-4 text-[#D8F078]" />
+                    <span className="hidden sm:inline">Role:</span>
+                    <span className="capitalize text-[#D8F078] font-bold">{currentRole}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${roleDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {roleDropdownOpen && (
+                    <div 
+                      className="absolute right-0 mt-2 w-72 rounded-2xl bg-[#1C221E] border border-[#28312B] p-2 shadow-2xl z-50 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150"
+                      onMouseLeave={() => setRoleDropdownOpen(false)}
+                    >
+                      <div className="px-3 py-2 text-[11px] font-mono uppercase text-[#A9B7A0] border-b border-[#28312B]">
+                        Select Live Application Role:
+                      </div>
+                      <div className="mt-1 space-y-1">
+                        {rolesList.map((r) => (
+                          <button
+                            key={r.id}
+                            onClick={() => {
+                              onSelectRole(r.id);
+                              setRoleDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2.5 rounded-xl transition-all duration-150 flex items-start gap-3 ${
+                              currentRole === r.id
+                                ? 'bg-[#123B2A] text-[#F7F5EF] border border-[#D8F078]/30'
+                                : 'hover:bg-[#28312B]/60 text-[#A9B7A0] hover:text-[#F7F5EF]'
+                            }`}
+                          >
+                            <span className="text-xl">{r.icon}</span>
+                            <div>
+                              <div className="text-xs font-bold flex items-center gap-1.5">
+                                {r.label}
+                                {currentRole === r.id && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#D8F078]" />
+                                )}
+                              </div>
+                              <div className="text-[11px] text-[#A9B7A0] leading-snug line-clamp-1 mt-0.5">
+                                {r.desc}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => onSelectRole('student')}
+                  className="relative group overflow-hidden px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] transition-all duration-200 shadow-glow-lime flex items-center gap-2 active:scale-95"
+                >
+                  <span>Launch App</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                </button>
+              </>
             ) : (
               <button
                 onClick={onNavigateHome}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#F7F5EF] bg-[#123B2A] hover:bg-[#1B523B] border border-[#D8F078]/30 transition-all duration-200"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-[#F7F5EF] bg-[#1C221E] hover:bg-[#28312B] border border-[#28312B] hover:border-[#D8F078]/40 transition-all flex items-center gap-2"
               >
-                Overview Page
+                <span>← Back to Overview</span>
               </button>
             )}
 

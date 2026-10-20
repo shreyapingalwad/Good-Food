@@ -12,6 +12,8 @@ export interface MenuItem {
   sustainabilityScore: number; // 1-10
   avgRating: number;
   totalRatings: number;
+  imageUrl?: string;
+  description?: string;
 }
 
 export interface DayMenu {
@@ -54,6 +56,7 @@ export interface KitchenLog {
   notes?: string;
   recordedBy: string;
   timestamp: string;
+  imageUrl?: string;
 }
 
 export type DonationStatus = 'AVAILABLE' | 'CLAIMED' | 'PICKED_UP' | 'COMPLETED' | 'EXPIRED';
@@ -66,7 +69,7 @@ export interface SurplusDonation {
   servingsCount: number;
   mealType: MealType;
   preparedAt: string;
-  temperatureAtPackaging: number; // Celsius (e.g., 65°C hot holding or 4°C chilled)
+  temperatureAtPackaging: number; // Celsius (e.g., 68°C hot holding)
   isHygienicallyPacked: boolean;
   isPlateLeftover: false; // Strict guarantee: NEVER true for donations
   expiryDeadline: string; // ISO string: 90 to 120 mins from log
@@ -79,6 +82,7 @@ export interface SurplusDonation {
   kitchenFacility: string;
   pickupLocation: string;
   beneficiaryTarget: string;
+  imageUrl?: string;
 }
 
 export interface NgoPartner {
@@ -92,6 +96,7 @@ export interface NgoPartner {
   verificationBadge: string;
   totalPickupsCompleted: number;
   mealsDistributed: number;
+  logoUrl?: string;
 }
 
 export interface PredictionFeatures {

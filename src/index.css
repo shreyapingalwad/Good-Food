@@ -52,24 +52,31 @@
 
 /* Custom visual utilities */
 .glass-panel {
-  background: rgba(21, 25, 22, 0.75);
+  background: rgba(28, 34, 30, 0.78);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(169, 183, 160, 0.12);
+  border: 1px solid rgba(169, 183, 160, 0.14);
 }
 
 .glass-panel-elevated {
-  background: rgba(28, 34, 30, 0.85);
+  background: rgba(28, 34, 30, 0.90);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(216, 240, 120, 0.15);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(216, 240, 120, 0.20);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
 }
 
-.glass-pill {
-  background: rgba(18, 59, 42, 0.45);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(216, 240, 120, 0.2);
+.food-card-overlay {
+  background: linear-gradient(180deg, rgba(21, 25, 22, 0.1) 0%, rgba(21, 25, 22, 0.85) 70%, rgba(21, 25, 22, 0.98) 100%);
+}
+
+.food-card-hover {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.food-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.8), 0 0 1px 1px rgba(216, 240, 120, 0.3);
 }
 
 .text-gradient-lime {

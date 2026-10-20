@@ -57,111 +57,135 @@ export const ProblemSection: React.FC = () => {
           </div>
         </div>
 
-        {/* Comparison Grid */}
+        {/* Photographic Comparison Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           
-          {/* Legacy Card */}
-          <div className={`p-8 rounded-3xl transition-all duration-300 border ${
+          {/* Legacy Card with Landfill Imagery Backdrop */}
+          <div className={`relative rounded-3xl overflow-hidden transition-all duration-300 border flex flex-col justify-between ${
             activeTab === 'legacy' 
-              ? 'bg-[#1C221E] border-red-500/40 shadow-2xl scale-[1.01]' 
-              : 'glass-panel border-[#28312B] opacity-75'
+              ? 'border-red-500/50 shadow-2xl scale-[1.01]' 
+              : 'border-[#28312B] opacity-80'
           }`}>
-            <div className="flex items-center justify-between pb-6 border-b border-[#28312B] mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
-                  <AlertTriangle className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#F7F5EF]">Conventional Status Quo</h3>
-                  <p className="text-xs text-[#A9B7A0]">Static guesswork & blind batching</p>
-                </div>
-              </div>
-              <span className="text-xs font-mono px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
-                High Risk
-              </span>
+            {/* Background Photography with Gradient Overlay */}
+            <div className="absolute inset-0 z-0">
+              <img 
+                src="https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=1000&q=80" 
+                alt="Landfill food waste crisis"
+                className="w-full h-full object-cover filter grayscale contrast-125 opacity-25"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#151916] via-[#1C221E]/95 to-[#1C221E]/90" />
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[#151916]/60 border border-[#28312B]">
-                <Flame className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs font-bold text-[#F7F5EF]">35% - 40% Overproduction Gap</div>
-                  <p className="text-xs text-[#A9B7A0] mt-0.5">Kitchens overcook to prevent "running out" complaints, producing dozens of unused gastronorm pans daily.</p>
+            <div className="relative z-10 p-8 space-y-6">
+              <div className="flex items-center justify-between pb-6 border-b border-[#28312B]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+                    <AlertTriangle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#F7F5EF]">Conventional Status Quo</h3>
+                    <p className="text-xs text-[#A9B7A0]">Static guesswork & blind batching</p>
+                  </div>
                 </div>
+                <span className="text-xs font-mono px-3 py-1 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">
+                  High Risk
+                </span>
               </div>
 
-              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[#151916]/60 border border-[#28312B]">
-                <ShieldAlert className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs font-bold text-[#F7F5EF]">Contaminated Disposal</div>
-                  <p className="text-xs text-[#A9B7A0] mt-0.5">Edible unserved kitchen trays are dumped into black garbage sacks alongside uneaten plate scraps, making redistribution impossible.</p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#151916]/80 border border-red-500/20 backdrop-blur-md">
+                  <Flame className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#F7F5EF]">35% - 40% Overproduction Gap</div>
+                    <p className="text-xs text-[#A9B7A0] mt-0.5">Kitchens overcook to prevent "running out" complaints, producing dozens of unused gastronorm pans daily.</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[#151916]/60 border border-[#28312B]">
-                <DollarSign className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs font-bold text-[#F7F5EF]">Unbudgeted Food Loss</div>
-                  <p className="text-xs text-[#A9B7A0] mt-0.5">An average campus kitchen bleeds $45,000 to $70,000 annually in discarded raw ingredients and waste disposal fees.</p>
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#151916]/80 border border-red-500/20 backdrop-blur-md">
+                  <ShieldAlert className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#F7F5EF]">Contaminated Disposal</div>
+                    <p className="text-xs text-[#A9B7A0] mt-0.5">Edible unserved kitchen trays are dumped into black garbage sacks alongside uneaten plate scraps, making redistribution impossible.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#151916]/80 border border-red-500/20 backdrop-blur-md">
+                  <DollarSign className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#F7F5EF]">Unbudgeted Food Loss</div>
+                    <p className="text-xs text-[#A9B7A0] mt-0.5">An average campus kitchen bleeds ₹45,000 to ₹70,000 monthly in discarded raw ingredients and waste disposal fees.</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-[#28312B] flex items-center justify-between text-xs text-[#A9B7A0]">
+            <div className="relative z-10 p-6 mx-8 mb-6 rounded-2xl bg-[#151916]/90 border border-red-500/30 flex items-center justify-between text-xs text-[#A9B7A0]">
               <span>Result: Discarded into landfill</span>
               <span className="font-mono text-red-400 font-bold">~420 kg discarded weekly</span>
             </div>
           </div>
 
-          {/* MessSaver Solution Card */}
-          <div className={`p-8 rounded-3xl transition-all duration-300 border ${
+          {/* MessSaver Solution Card with Fresh Farm Harvest Imagery */}
+          <div className={`relative rounded-3xl overflow-hidden transition-all duration-300 border flex flex-col justify-between ${
             activeTab === 'messaver' 
-              ? 'bg-[#1C221E] border-[#D8F078]/40 shadow-glow-forest scale-[1.01]' 
-              : 'glass-panel border-[#28312B] opacity-75'
+              ? 'border-[#D8F078]/50 shadow-glow-forest scale-[1.01]' 
+              : 'border-[#28312B] opacity-80'
           }`}>
-            <div className="flex items-center justify-between pb-6 border-b border-[#28312B] mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#123B2A] border border-[#D8F078]/30 flex items-center justify-center text-[#D8F078]">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#F7F5EF]">MessSaver Intelligent Platform</h3>
-                  <p className="text-xs text-[#D8F078]">Continuous feedback loop & safety chain</p>
-                </div>
-              </div>
-              <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/25">
-                Zero Avoidable Waste
-              </span>
+            {/* Background Photography with Gradient Overlay */}
+            <div className="absolute inset-0 z-0">
+              <img 
+                src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1000&q=80" 
+                alt="Fresh organic produce harvest"
+                className="w-full h-full object-cover filter brightness-90 contrast-110 opacity-35"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#151916] via-[#123B2A]/90 to-[#1C221E]/85" />
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[#123B2A]/40 border border-[#D8F078]/20">
-                <Sparkles className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs font-bold text-[#F7F5EF]">Real-time Student Opt-in Signal</div>
-                  <p className="text-xs text-[#A9B7A0] mt-0.5">Students log meal attendance before the service cutoff, reducing head-count uncertainty from ±30% down to &lt; 2%.</p>
+            <div className="relative z-10 p-8 space-y-6">
+              <div className="flex items-center justify-between pb-6 border-b border-[#28312B]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#123B2A] border border-[#D8F078]/40 flex items-center justify-center text-[#D8F078]">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[#F7F5EF]">MessSaver Intelligent Platform</h3>
+                    <p className="text-xs text-[#D8F078]">Continuous feedback loop & safety chain</p>
+                  </div>
                 </div>
+                <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30">
+                  Zero Avoidable Waste
+                </span>
               </div>
 
-              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[#123B2A]/40 border border-[#D8F078]/20">
-                <CheckCircle2 className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs font-bold text-[#F7F5EF]">Strict Edible vs Plate Waste Separation</div>
-                  <p className="text-xs text-[#A9B7A0] mt-0.5">Kitchen surplus is packed hot at 65°C+ into sealed containers; plate leftovers go to local vermicompost bio-digestion.</p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#123B2A]/60 border border-[#D8F078]/25 backdrop-blur-md">
+                  <Sparkles className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#F7F5EF]">Real-time Student Opt-in Signal</div>
+                    <p className="text-xs text-[#A9B7A0] mt-0.5">Students log meal attendance before the service cutoff, reducing head-count uncertainty from ±30% down to &lt; 2%.</p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[#123B2A]/40 border border-[#D8F078]/20">
-                <ArrowRight className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
-                <div>
-                  <div className="text-xs font-bold text-[#F7F5EF]">90-Minute Fast NGO Handover</div>
-                  <p className="text-xs text-[#A9B7A0] mt-0.5">Verified local shelter partners receive automated dispatch notifications, claiming and picking up safe food with 4-digit PIN verification.</p>
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#123B2A]/60 border border-[#D8F078]/25 backdrop-blur-md">
+                  <CheckCircle2 className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#F7F5EF]">Strict Edible vs Plate Waste Separation</div>
+                    <p className="text-xs text-[#A9B7A0] mt-0.5">Kitchen surplus is packed hot at 65°C+ into sealed containers; plate leftovers go to local vermicompost bio-digestion.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#123B2A]/60 border border-[#D8F078]/25 backdrop-blur-md">
+                  <ArrowRight className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#F7F5EF]">90-Minute Fast NGO Handover</div>
+                    <p className="text-xs text-[#A9B7A0] mt-0.5">Verified local shelter partners receive automated dispatch notifications, claiming and picking up safe food with 4-digit PIN verification.</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-[#28312B] flex items-center justify-between text-xs text-[#A9B7A0]">
-              <span>Result: 100% Edible Surplus Diverted</span>
+            <div className="relative z-10 p-6 mx-8 mb-6 rounded-2xl bg-[#123B2A]/90 border border-[#D8F078]/40 shadow-glow-lime flex items-center justify-between text-xs text-[#A9B7A0]">
+              <span className="text-[#F7F5EF] font-medium">Result: 100% Edible Surplus Diverted</span>
               <span className="font-mono text-[#D8F078] font-bold">110 meals saved per shift</span>
             </div>
           </div>
