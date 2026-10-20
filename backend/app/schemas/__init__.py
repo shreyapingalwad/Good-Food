@@ -34,6 +34,9 @@ from app.schemas.kitchen import (
 from app.schemas.ngo import NgoPartnerBase, NgoPartnerCreate, NgoPartnerRead
 from app.schemas.donation import (
     DishItem,
+    DonationClaimRequest,
+    PickupVerificationRequest,
+    PickupVerificationResponse,
     SurplusDonationBase,
     SurplusDonationCreate,
     SurplusDonationCreateRequest,
@@ -87,6 +90,12 @@ __all__ = [
     "SurplusDonationBase",
     "SurplusDonationCreate",
     "SurplusDonationRead",
+    "SurplusDonationCreateRequest",
+    "SurplusDonationCreateResponse",
+    "SurplusDonationListResponse",
+    "DonationClaimRequest",
+    "PickupVerificationRequest",
+    "PickupVerificationResponse",
     "AuditEventBase",
     "AuditEventCreate",
     "AuditEventRead",
@@ -101,4 +110,5 @@ __all__ = [
     "PinRecoveryResponse",
     "SessionCleanupResponse",
 ]
+
 

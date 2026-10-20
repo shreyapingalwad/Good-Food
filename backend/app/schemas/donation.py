@@ -4,7 +4,7 @@ Pydantic schemas for Surplus Food Donation Offers and Redistribution.
 from datetime import datetime, timezone
 import math
 from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.models.enums import DonationStatus, MealType
 
@@ -93,6 +93,21 @@ class SurplusDonationBase(BaseModel):
                 raise ValueError("Expiry deadline cannot be empty.")
         return v
 
+    @model_validator(mode="after")
+    def validate_dishes_and_total_consistency(self) -> "SurplusDonationBase":
+        """
+        Validates mathematical consistency between individual dish weights and total_quantity_kg.
+        Normalizes the total weight from dish items server-side to prevent tampering or drift.
+        """
+        if self.dishes:
+            dishes_sum = round(sum(d.quantityKg for d in self.dishes), 2)
+            if abs(dishes_sum - self.total_quantity_kg) > 0.05:
+                raise ValueError(
+                    f"Dishes quantity sum ({dishes_sum} kg) does not match total_quantity_kg ({self.total_quantity_kg} kg)."
+                )
+            self.total_quantity_kg = dishes_sum
+        return self
+
 
 class SurplusDonationCreateRequest(SurplusDonationBase):
     """
@@ -134,6 +149,40 @@ class SurplusDonationListResponse(BaseModel):
     total: int
 
 
+class DonationClaimRequest(BaseModel):
+    """
+    Optional client payload for claiming an available surplus donation.
+    Notice: Claiming NGO identity is strictly derived from the server session,
+    never accepted from the client request.
+    """
+    notes: Optional[str] = Field(default=None, max_length=500, description="Optional pickup notes or driver dispatch reference")
+
+
+class PickupVerificationRequest(BaseModel):
+    """
+    Verification payload submitted by authorized kitchen staff at the gate
+    when an NGO collection driver arrives.
+    """
+    pin: str = Field(..., min_length=4, max_length=6, description="4-digit security pickup PIN")
+
+    @field_validator("pin")
+    @classmethod
+    def validate_pin(cls, v: str) -> str:
+        cleaned = v.strip()
+        if not cleaned.isdigit() or len(cleaned) != 4:
+            raise ValueError("Pickup PIN must be exactly 4 numeric digits")
+        return cleaned
+
+
+class PickupVerificationResponse(SurplusDonationRead):
+    """
+    Confirmation returned to kitchen staff upon successful PIN verification
+    and atomic handover completion.
+    """
+    success: bool = True
+    message: str = "Handover verified and donation completed successfully."
+
+
 # Backward compatibility aliases
 class SurplusDonationCreate(SurplusDonationBase):
     id: Optional[str] = None
@@ -144,3 +193,4 @@ class SurplusDonationCreate(SurplusDonationBase):
         max_length=6,
         description="Optional 4-digit PIN; generated securely if omitted",
     )
+
