@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, ExternalLink, ShieldCheck, FileText, Image } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { X, ExternalLink, ShieldCheck, FileText } from 'lucide-react';
 import { ASSET_MANIFEST } from '../../data/assetsManifest';
 
 interface AssetManifestModalProps {
@@ -8,10 +8,46 @@ interface AssetManifestModalProps {
 }
 
 export const AssetManifestModal: React.FC<AssetManifestModalProps> = ({ isOpen, onClose }) => {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Save previous overflow style and lock body scroll
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // Focus close button on mount
+    closeButtonRef.current?.focus();
+
+    // Escape key listener
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="asset-modal-title"
+      aria-describedby="asset-modal-desc"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="bg-[#1C221E] border border-[#28312B] rounded-3xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Modal Header */}
@@ -21,13 +57,15 @@ export const AssetManifestModal: React.FC<AssetManifestModalProps> = ({ isOpen, 
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-[#F7F5EF]">Asset & Licensing Manifest</h3>
-              <p className="text-xs text-[#A9B7A0]">Legitimate sources, verified commercial/non-commercial licenses & attributions</p>
+              <h3 id="asset-modal-title" className="text-lg font-bold text-[#F7F5EF]">Asset & Licensing Manifest</h3>
+              <p id="asset-modal-desc" className="text-xs text-[#A9B7A0]">Legitimate sources, verified commercial/non-commercial licenses & attributions</p>
             </div>
           </div>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
-            className="p-2 rounded-xl text-[#A9B7A0] hover:text-[#F7F5EF] hover:bg-[#28312B] transition-colors"
+            aria-label="Close asset manifest modal"
+            className="p-2 rounded-xl text-[#A9B7A0] hover:text-[#F7F5EF] hover:bg-[#28312B] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -63,7 +101,7 @@ export const AssetManifestModal: React.FC<AssetManifestModalProps> = ({ isOpen, 
                       href={asset.licenseUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#D8F078] hover:underline flex items-center gap-1"
+                      className="text-[#D8F078] hover:underline flex items-center gap-1 focus-visible:ring-1 focus-visible:ring-[#D8F078] focus-visible:outline-none rounded"
                     >
                       <span>{asset.license}</span>
                       <ExternalLink className="w-3 h-3" />
@@ -99,7 +137,7 @@ export const AssetManifestModal: React.FC<AssetManifestModalProps> = ({ isOpen, 
         <div className="p-4 border-t border-[#28312B] bg-[#151916] flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#28312B] hover:bg-[#313C34] text-[#F7F5EF] transition-colors"
+            className="px-5 py-2 rounded-xl text-xs font-semibold bg-[#28312B] hover:bg-[#313C34] text-[#F7F5EF] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none transition-colors"
           >
             Close Manifest
           </button>

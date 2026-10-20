@@ -24,6 +24,7 @@ export const HeroFoodScene: React.FC = () => {
 
     // Check prefers-reduced-motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isMobile = window.innerWidth < 768;
 
     // SCENE SETUP
     const scene = new THREE.Scene();
@@ -38,16 +39,17 @@ export const HeroFoodScene: React.FC = () => {
     camera.position.set(0, 0.3, 7.2);
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: !isMobile, // Disable expensive MSAA on mobile devices
       alpha: true,
       powerPreference: 'high-performance'
     });
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Intelligent pixel ratio capping to avoid massive mobile fill-rate GPU overhead
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.6));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = isMobile ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
     // ART-DIRECTED STUDIO LIGHTING
@@ -58,8 +60,9 @@ export const HeroFoodScene: React.FC = () => {
     const keyLight = new THREE.DirectionalLight(0xFFF7E6, 2.4);
     keyLight.position.set(5, 9, 6);
     keyLight.castShadow = true;
-    keyLight.shadow.mapSize.width = 1024;
-    keyLight.shadow.mapSize.height = 1024;
+    const shadowMapRes = isMobile ? 512 : 1024;
+    keyLight.shadow.mapSize.width = shadowMapRes;
+    keyLight.shadow.mapSize.height = shadowMapRes;
     keyLight.shadow.camera.near = 0.5;
     keyLight.shadow.camera.far = 25;
     keyLight.shadow.bias = -0.001;
@@ -332,7 +335,7 @@ export const HeroFoodScene: React.FC = () => {
     // =========================================================================
     // 6. AMBIENT GLOW PARTICLES (Golden & Lime Micro Nutrient Specks)
     // =========================================================================
-    const particleCount = 85;
+    const particleCount = isMobile ? 35 : 85;
     const particleGeo = new THREE.BufferGeometry();
     const particlePos = new Float32Array(particleCount * 3);
 
@@ -383,11 +386,46 @@ export const HeroFoodScene: React.FC = () => {
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
+      if (prefersReducedMotion) {
+        renderer.render(scene, camera);
+      }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize);
+
+    // Visibility & Viewport Intersection Monitoring
+    let isIntersecting = true;
+    let isPageVisible = !document.hidden;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isIntersecting = entry.isIntersecting;
+      },
+      { threshold: 0.02 }
+    );
+    observer.observe(container);
+
+    const handleVisibilityChange = () => {
+      isPageVisible = !document.hidden;
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // WebGL Context Recovery Listeners
+    const handleContextLost = (e: Event) => {
+      e.preventDefault();
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    };
+    const handleContextRestored = () => {
+      if (!prefersReducedMotion) {
+        animate();
+      } else {
+        renderer.render(scene, camera);
+      }
+    };
+    renderer.domElement.addEventListener('webglcontextlost', handleContextLost, false);
+    renderer.domElement.addEventListener('webglcontextrestored', handleContextRestored, false);
 
     // ANIMATION RENDER LOOP
     const clock = new THREE.Clock();
@@ -395,6 +433,13 @@ export const HeroFoodScene: React.FC = () => {
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
+
+      // Power-saving: skip rendering when hero canvas is scrolled out of viewport or tab is inactive
+      if (!isIntersecting || !isPageVisible) {
+        return;
+      }
+
+      const delta = Math.min(clock.getDelta(), 0.1);
       const elapsedTime = clock.getElapsedTime();
 
       // Mouse Lerp
@@ -416,18 +461,18 @@ export const HeroFoodScene: React.FC = () => {
       rootGroup.rotation.x = -targetY * 0.3 + (prefersReducedMotion ? 0 : Math.sin(elapsedTime * 0.35) * 0.04) + scrollFactor * 0.2;
 
       if (!prefersReducedMotion) {
-        // Natural floating breathing rhythms
+        // Natural floating breathing rhythms with frame-rate independent delta
         platter.position.y = -1.25 + Math.sin(elapsedTime * 0.75) * 0.05;
         rimRing.position.y = platter.position.y + 0.24;
 
         tomatoGroup.position.y = -0.3 + Math.sin(elapsedTime * 1.05 + 1) * 0.08;
-        tomatoGroup.rotation.y += 0.006;
+        tomatoGroup.rotation.y += delta * 0.36;
 
         pepperGroup.position.y = -0.15 + Math.cos(elapsedTime * 0.85 + 2) * 0.09;
-        pepperGroup.rotation.y += 0.005;
+        pepperGroup.rotation.y += delta * 0.30;
 
         grainCluster.position.y = 0.65 + Math.sin(elapsedTime * 1.2) * 0.1;
-        grainCluster.rotation.y += 0.007;
+        grainCluster.rotation.y += delta * 0.42;
 
         // Leaf oscillation
         leaves.forEach((l, idx) => {
@@ -443,14 +488,27 @@ export const HeroFoodScene: React.FC = () => {
       renderer.render(scene, camera);
     };
 
-    animate();
+    if (prefersReducedMotion) {
+      // Reduced motion: Render once cleanly without continuous RAF loop
+      renderer.render(scene, camera);
+    } else {
+      animate();
+    }
 
     // CLEANUP & RESOURCE DISPOSAL
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      observer.disconnect();
+
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+
+      renderer.domElement.removeEventListener('webglcontextlost', handleContextLost);
+      renderer.domElement.removeEventListener('webglcontextrestored', handleContextRestored);
 
       // Deep disposal of geometries & materials
       scene.traverse((object) => {

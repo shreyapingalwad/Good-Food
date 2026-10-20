@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { OptimizedImage } from '../common/OptimizedImage';
 import { storageService } from '../../services/storageService';
 import { KitchenLog, SurplusDonation, MealType } from '../../types';
 import { 
@@ -119,9 +120,11 @@ export const KitchenPortal: React.FC = () => {
       {/* Culinary Station Header Banner with Commercial Kitchen Photography */}
       <div className="relative rounded-3xl overflow-hidden border border-[#28312B] min-h-[170px] flex items-center shadow-card-dark">
         <div className="absolute inset-0 z-0">
-          <img 
+          <OptimizedImage 
             src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=1600&q=80" 
             alt="Stainless steel commercial kitchen workbench"
+            width={1600}
+            height={300}
             className="w-full h-full object-cover filter brightness-[0.38] contrast-125"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#151916] via-[#151916]/85 to-transparent" />
@@ -335,9 +338,11 @@ export const KitchenPortal: React.FC = () => {
             >
               <div className="flex items-center gap-4">
                 {d.imageUrl && (
-                  <img 
+                  <OptimizedImage 
                     src={d.imageUrl} 
                     alt={d.foodTitle}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-xl object-cover shrink-0 border border-[#28312B]"
                   />
                 )}
@@ -385,20 +390,29 @@ export const KitchenPortal: React.FC = () => {
 
       {/* Dispatch Surplus Modal */}
       {isSurplusModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="surplus-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsSurplusModalOpen(false);
+          }}
+        >
           <div className="glass-panel-elevated w-full max-w-lg rounded-3xl p-6 sm:p-8 border border-[#D8F078]/30 space-y-6 shadow-2xl">
             
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[10px] font-mono text-[#D8F078] uppercase font-bold">Cold-Chain Protocol</span>
-                <h3 className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
+                <h3 id="surplus-modal-title" className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
                   Raise Verified Surplus Offer
                 </h3>
                 <p className="text-xs text-[#A9B7A0]">Broadcasts edible unserved trays to authorized NGO partners with a pickup PIN.</p>
               </div>
               <button
                 onClick={() => setIsSurplusModalOpen(false)}
-                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF]"
+                aria-label="Close surplus offer modal"
+                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none"
               >
                 ✕
               </button>

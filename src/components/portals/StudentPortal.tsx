@@ -15,6 +15,7 @@ import {
   UtensilsCrossed,
   Info
 } from 'lucide-react';
+import { OptimizedImage } from '../common/OptimizedImage';
 
 export const StudentPortal: React.FC = () => {
   const [attendance, setAttendance] = useState<Record<string, boolean>>({});
@@ -261,9 +262,11 @@ export const StudentPortal: React.FC = () => {
             >
               {/* Dish Photography Frame */}
               <div className="relative h-48 w-full overflow-hidden bg-[#151916]">
-                <img 
+                <OptimizedImage 
                   src={dish.imageUrl || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80'} 
                   alt={dish.name}
+                  width={600}
+                  height={350}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-95"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#1C221E] via-transparent to-transparent opacity-85" />
@@ -352,20 +355,29 @@ export const StudentPortal: React.FC = () => {
 
       {/* 5-Star Interactive Dish Rating Modal */}
       {ratingModalItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rating-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setRatingModalItem(null);
+          }}
+        >
           <div className="glass-panel-elevated w-full max-w-md rounded-3xl p-6 sm:p-8 border border-[#D8F078]/30 space-y-6 shadow-2xl">
             
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[10px] font-mono text-[#D8F078] uppercase font-bold">Taste Feedback</span>
-                <h3 className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
+                <h3 id="rating-modal-title" className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
                   {ratingModalItem.name}
                 </h3>
                 <p className="text-xs text-[#A9B7A0]">Your rating directly trains AI batch portioning recommendations.</p>
               </div>
               <button
                 onClick={() => setRatingModalItem(null)}
-                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF]"
+                aria-label="Close dish rating modal"
+                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none"
               >
                 ✕
               </button>

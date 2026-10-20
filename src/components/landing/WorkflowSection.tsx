@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calendar, Cpu, ChefHat, Scale, HeartHandshake, CheckCircle2, ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { OptimizedImage } from '../common/OptimizedImage';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -88,14 +89,14 @@ export const WorkflowSection: React.FC = () => {
     }
   ];
 
-  // GSAP ScrollTrigger Pinned Sequence Setup
+  // GSAP ScrollTrigger Pinned Sequence Setup with Responsive MatchMedia
   useEffect(() => {
-    const isDesktop = window.innerWidth >= 1024;
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
 
-    if (!isDesktop || prefersReducedMotion) return;
+    const mm = gsap.matchMedia();
 
-    const ctx = gsap.context(() => {
+    mm.add('(min-width: 1024px)', () => {
       ScrollTrigger.create({
         trigger: sectionRef.current,
         start: 'top top',
@@ -103,6 +104,7 @@ export const WorkflowSection: React.FC = () => {
         pin: pinContainerRef.current,
         scrub: 0.5,
         anticipatePin: 1,
+        invalidateOnRefresh: true,
         onUpdate: (self) => {
           const stepCount = workflowSteps.length;
           const calculatedIndex = Math.min(
@@ -112,9 +114,9 @@ export const WorkflowSection: React.FC = () => {
           setActiveStep(calculatedIndex);
         }
       });
-    }, sectionRef);
+    });
 
-    return () => ctx.revert();
+    return () => mm.revert();
   }, []);
 
   const current = workflowSteps[activeStep];
@@ -262,10 +264,12 @@ export const WorkflowSection: React.FC = () => {
 
             {/* Right Photographic Showcase Frame */}
             <div className="lg:col-span-5 relative min-h-[300px] lg:min-h-full overflow-hidden bg-[#151916]">
-              <img
+              <OptimizedImage
                 key={activeStep}
                 src={current.imageUrl}
                 alt={current.title}
+                width={800}
+                height={600}
                 className="w-full h-full object-cover transition-all duration-700 ease-out transform scale-100 filter brightness-95 contrast-105"
               />
               {/* Subtle visual gradient scrim */}

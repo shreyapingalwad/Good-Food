@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { OptimizedImage } from '../common/OptimizedImage';
 import { storageService, SEED_NGOS } from '../../services/storageService';
 import { SurplusDonation, NgoPartner } from '../../types';
 import { 
@@ -170,9 +171,11 @@ export const NgoPortal: React.FC = () => {
               >
                 {/* Food Image Banner */}
                 <div className="relative h-44 w-full overflow-hidden bg-[#1C221E]">
-                  <img 
+                  <OptimizedImage 
                     src={d.imageUrl || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=800&q=80'} 
                     alt={d.foodTitle}
+                    width={600}
+                    height={300}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-95"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#151916] via-transparent to-transparent opacity-80" />
@@ -288,13 +291,21 @@ export const NgoPortal: React.FC = () => {
 
       {/* PIN Handover Verification Modal */}
       {handoverDonationId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pin-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setHandoverDonationId(null);
+          }}
+        >
           <div className="glass-panel-elevated w-full max-w-md rounded-3xl p-6 sm:p-8 border border-[#D8F078]/30 space-y-6 shadow-2xl">
             
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[10px] font-mono text-[#D8F078] uppercase font-bold">Gate 3 Verification</span>
-                <h3 className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
+                <h3 id="pin-modal-title" className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
                   Confirm Custody Handover
                 </h3>
                 <p className="text-xs text-[#A9B7A0]">
@@ -303,7 +314,8 @@ export const NgoPortal: React.FC = () => {
               </div>
               <button
                 onClick={() => setHandoverDonationId(null)}
-                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF]"
+                aria-label="Close handover dialog"
+                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none"
               >
                 ✕
               </button>

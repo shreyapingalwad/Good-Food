@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Thermometer, Clock, Lock, CheckCircle, AlertTriangle, Truck } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { OptimizedImage } from '../common/OptimizedImage';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -132,9 +133,11 @@ export const RedistributionStory: React.FC = () => {
           className="mb-12 relative rounded-3xl overflow-hidden border border-[#D8F078]/30 shadow-card-dark"
         >
           <div className="absolute inset-0 z-0">
-            <img 
+            <OptimizedImage 
               src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80" 
               alt="Community distribution van" 
+              width={1200}
+              height={400}
               className="w-full h-full object-cover filter brightness-50 contrast-125 opacity-30"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-[#1C221E] via-[#1C221E]/95 to-[#1C221E]/80" />
@@ -181,9 +184,11 @@ export const RedistributionStory: React.FC = () => {
               >
                 {/* Photo Thumbnail */}
                 <div className="h-36 w-full relative overflow-hidden">
-                  <img 
+                  <OptimizedImage 
                     src={st.imageUrl} 
                     alt={st.title}
+                    width={400}
+                    height={200}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 filter brightness-90"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#1C221E] via-transparent to-transparent opacity-80" />

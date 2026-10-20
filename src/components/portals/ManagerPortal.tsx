@@ -302,20 +302,29 @@ export const ManagerPortal: React.FC = () => {
 
       {/* Safety Buffer Override Slide-Over Modal */}
       {isOverrideOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-override-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsOverrideOpen(false);
+          }}
+        >
           <div className="glass-panel-elevated w-full max-w-md rounded-3xl p-6 sm:p-8 border border-[#D8F078]/30 space-y-6 shadow-2xl">
             
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[10px] font-mono text-[#D8F078] uppercase font-bold">Manager Override</span>
-                <h3 className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
+                <h3 id="modal-override-title" className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
                   Adjust Safety Buffer
                 </h3>
                 <p className="text-xs text-[#A9B7A0]">Modifies AI batch cooking target. Requires mandatory audit justification.</p>
               </div>
               <button
                 onClick={() => setIsOverrideOpen(false)}
-                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF]"
+                aria-label="Close buffer override modal"
+                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none"
               >
                 ✕
               </button>

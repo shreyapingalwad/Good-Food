@@ -145,10 +145,11 @@ export const AdminPortal: React.FC = () => {
               <Search className="w-4 h-4 text-[#A9B7A0] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
+                aria-label="Search audit events and actors"
                 placeholder="Search audit events, actors..."
                 value={auditSearch}
                 onChange={(e) => setAuditSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#151916] border border-[#28312B] focus:border-[#D8F078] text-xs text-[#F7F5EF] focus:outline-none"
+                className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#151916] border border-[#28312B] focus:border-[#D8F078] focus-visible:ring-2 focus-visible:ring-[#D8F078] focus-visible:outline-none text-xs text-[#F7F5EF]"
               />
             </div>
           </div>

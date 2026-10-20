@@ -11,19 +11,33 @@ import { AnalyticsPreview } from './components/landing/AnalyticsPreview';
 import { TechEngineSection } from './components/landing/TechEngineSection';
 import { CtaSection } from './components/landing/CtaSection';
 import { Footer } from './components/landing/Footer';
-import { AssetManifestModal } from './components/landing/AssetManifestModal';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Portals
+// Portals (Code-split with React.lazy)
 import { PortalShell } from './components/portals/PortalShell';
-import { StudentPortal } from './components/portals/StudentPortal';
-import { KitchenPortal } from './components/portals/KitchenPortal';
-import { ManagerPortal } from './components/portals/ManagerPortal';
-import { NgoPortal } from './components/portals/NgoPortal';
-import { AdminPortal } from './components/portals/AdminPortal';
+
+const StudentPortal = React.lazy(() => import('./components/portals/StudentPortal').then(m => ({ default: m.StudentPortal })));
+const KitchenPortal = React.lazy(() => import('./components/portals/KitchenPortal').then(m => ({ default: m.KitchenPortal })));
+const ManagerPortal = React.lazy(() => import('./components/portals/ManagerPortal').then(m => ({ default: m.ManagerPortal })));
+const NgoPortal = React.lazy(() => import('./components/portals/NgoPortal').then(m => ({ default: m.NgoPortal })));
+const AdminPortal = React.lazy(() => import('./components/portals/AdminPortal').then(m => ({ default: m.AdminPortal })));
+const AssetManifestModal = React.lazy(() => import('./components/landing/AssetManifestModal').then(m => ({ default: m.AssetManifestModal })));
+
+// Accessible Portal Loading Skeleton
+const PortalLoadingSkeleton: React.FC = () => (
+  <div className="w-full space-y-6 animate-pulse py-4" aria-busy="true" aria-label="Loading portal workspace">
+    <div className="h-28 rounded-3xl bg-[#1C221E] border border-[#28312B]" />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="h-44 rounded-3xl bg-[#1C221E] border border-[#28312B]" />
+      <div className="h-44 rounded-3xl bg-[#1C221E] border border-[#28312B]" />
+      <div className="h-44 rounded-3xl bg-[#1C221E] border border-[#28312B]" />
+    </div>
+    <div className="h-64 rounded-3xl bg-[#1C221E] border border-[#28312B]" />
+  </div>
+);
 
 export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<'landing' | 'portal'>('landing');
@@ -95,11 +109,13 @@ export const App: React.FC = () => {
           }}
           onReturnHome={handleReturnHome}
         >
-          {currentRole === 'student' && <StudentPortal />}
-          {currentRole === 'kitchen' && <KitchenPortal />}
-          {currentRole === 'manager' && <ManagerPortal />}
-          {currentRole === 'ngo' && <NgoPortal />}
-          {currentRole === 'admin' && <AdminPortal />}
+          <React.Suspense fallback={<PortalLoadingSkeleton />}>
+            {currentRole === 'student' && <StudentPortal />}
+            {currentRole === 'kitchen' && <KitchenPortal />}
+            {currentRole === 'manager' && <ManagerPortal />}
+            {currentRole === 'ngo' && <NgoPortal />}
+            {currentRole === 'admin' && <AdminPortal />}
+          </React.Suspense>
         </PortalShell>
       )}
 
@@ -109,11 +125,15 @@ export const App: React.FC = () => {
         onOpenAssetManifest={() => setIsAssetManifestOpen(true)}
       />
 
-      {/* Asset Manifest Modal */}
-      <AssetManifestModal
-        isOpen={isAssetManifestOpen}
-        onClose={() => setIsAssetManifestOpen(false)}
-      />
+      {/* Asset Manifest Modal (Code-split) */}
+      {isAssetManifestOpen && (
+        <React.Suspense fallback={null}>
+          <AssetManifestModal
+            isOpen={isAssetManifestOpen}
+            onClose={() => setIsAssetManifestOpen(false)}
+          />
+        </React.Suspense>
+      )}
 
     </div>
   );

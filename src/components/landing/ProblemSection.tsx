@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, CheckCircle2, DollarSign, Flame, Trash2, ShieldAlert, Sparkles, ArrowRight } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { OptimizedImage } from '../common/OptimizedImage';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -98,9 +99,11 @@ export const ProblemSection: React.FC = () => {
           }`}>
             {/* Background Photography with Gradient Overlay */}
             <div className="absolute inset-0 z-0 overflow-hidden">
-              <img 
+              <OptimizedImage 
                 src="https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=1000&q=80" 
                 alt="Landfill food waste crisis"
+                width={1000}
+                height={667}
                 className="w-full h-full object-cover filter grayscale contrast-125 opacity-25 transition-transform duration-700 hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#151916] via-[#1C221E]/95 to-[#1C221E]/90" />
@@ -163,9 +166,11 @@ export const ProblemSection: React.FC = () => {
           }`}>
             {/* Background Photography with Gradient Overlay */}
             <div className="absolute inset-0 z-0 overflow-hidden">
-              <img 
+              <OptimizedImage 
                 src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1000&q=80" 
                 alt="Fresh organic produce harvest"
+                width={1000}
+                height={667}
                 className="w-full h-full object-cover filter brightness-90 contrast-110 opacity-35 transition-transform duration-700 hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#151916] via-[#123B2A]/90 to-[#123B2A]/80" />
