@@ -1,7 +1,27 @@
 from app.schemas.health import LivenessResponse, ReadinessResponse
 from app.schemas.user import UserBase, UserCreate, UserRead
-from app.schemas.attendance import StudentAttendanceBase, StudentAttendanceCreate, StudentAttendanceRead
-from app.schemas.dish_rating import DishRatingBase, DishRatingCreate, DishRatingRead
+from app.schemas.attendance import (
+    AttendanceHistoryResponse,
+    AttendanceResponse,
+    AttendanceSubmitRequest,
+    FacilityAttendanceSummary,
+    MealAttendanceStat,
+    StudentAttendanceBase,
+    StudentAttendanceCreate,
+    StudentAttendanceRead,
+)
+from app.schemas.dish_rating import (
+    AnonymousComment,
+    DishRatingBase,
+    DishRatingCreate,
+    DishRatingRead,
+    DishRatingSummary,
+    RatingDistribution,
+    RatingHistoryResponse,
+    RatingResponse,
+    RatingSubmitRequest,
+    RatingsSummaryResponse,
+)
 from app.schemas.kitchen import KitchenLogBase, KitchenLogCreate, KitchenLogRead
 from app.schemas.ngo import NgoPartnerBase, NgoPartnerCreate, NgoPartnerRead
 from app.schemas.donation import DishItem, SurplusDonationBase, SurplusDonationCreate, SurplusDonationRead
@@ -26,9 +46,21 @@ __all__ = [
     "StudentAttendanceBase",
     "StudentAttendanceCreate",
     "StudentAttendanceRead",
+    "AttendanceSubmitRequest",
+    "AttendanceResponse",
+    "AttendanceHistoryResponse",
+    "MealAttendanceStat",
+    "FacilityAttendanceSummary",
     "DishRatingBase",
     "DishRatingCreate",
     "DishRatingRead",
+    "RatingSubmitRequest",
+    "RatingResponse",
+    "RatingHistoryResponse",
+    "RatingDistribution",
+    "AnonymousComment",
+    "DishRatingSummary",
+    "RatingsSummaryResponse",
     "KitchenLogBase",
     "KitchenLogCreate",
     "KitchenLogRead",
@@ -53,3 +85,4 @@ __all__ = [
     "PinRecoveryResponse",
     "SessionCleanupResponse",
 ]
+

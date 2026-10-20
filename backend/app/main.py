@@ -6,6 +6,8 @@ from fastapi.responses import JSONResponse
 
 from app.api.health import router as health_router
 from app.api.auth import router as auth_router
+from app.api.attendance import router as attendance_router
+from app.api.ratings import router as ratings_router
 from app.core.config import get_settings
 
 logger = logging.getLogger("messaver.backend")
@@ -69,6 +71,12 @@ def create_application() -> FastAPI:
     # Mount Authentication and Session Endpoints
     app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth")
     app.include_router(auth_router, prefix="/auth")
+
+    # Mount Student Meal Attendance Endpoints
+    app.include_router(attendance_router, prefix=f"{settings.API_V1_STR}/attendance")
+
+    # Mount Meal and Dish Rating Endpoints
+    app.include_router(ratings_router, prefix=f"{settings.API_V1_STR}/ratings")
 
     return app
 
