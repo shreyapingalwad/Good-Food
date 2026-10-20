@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserRole } from '../../types';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, isDevEnvironment } from '../../context/AuthContext';
 import { AuthModal } from '../common/AuthModal';
 import { 
   GraduationCap, 
@@ -287,13 +287,15 @@ export const PortalShell: React.FC<PortalShellProps> = ({
                 Actions in this portal require <strong>{currentRole}</strong> authorization.
               </span>
             </div>
-            <button
-              onClick={() => switchDevRole(currentRole)}
-              className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/40 hover:bg-[#123B2A]/80 font-semibold text-[11px] shrink-0 flex items-center gap-1.5 shadow-sm"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Switch to {currentRole} demo account</span>
-            </button>
+            {isDevEnvironment && (
+              <button
+                onClick={() => switchDevRole(currentRole)}
+                className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/40 hover:bg-[#123B2A]/80 font-semibold text-[11px] shrink-0 flex items-center gap-1.5 shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Switch to {currentRole} demo account</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -306,17 +308,19 @@ export const PortalShell: React.FC<PortalShellProps> = ({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => switchDevRole(currentRole)}
-                className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30 hover:bg-[#123B2A]/80 font-bold text-[11px] shrink-0"
-              >
-                Sign in as {currentRole}
-              </button>
+              {isDevEnvironment && (
+                <button
+                  onClick={() => switchDevRole(currentRole)}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30 hover:bg-[#123B2A]/80 font-bold text-[11px] shrink-0"
+                >
+                  Sign in as {currentRole}
+                </button>
+              )}
               <button
                 onClick={() => setIsAuthModalOpen(true)}
                 className="px-3 py-1.5 rounded-xl bg-[#151916] text-[#F7F5EF] border border-[#28312B] hover:border-[#D8F078]/40 text-[11px] shrink-0"
               >
-                Custom Login
+                Sign In
               </button>
             </div>
           </div>

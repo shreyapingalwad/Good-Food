@@ -21,6 +21,7 @@ from app.core.auth_dependencies import (
     require_csrf,
 )
 from app.core.database import get_db
+from app.core.session_service import invalidate_all_user_sessions
 from app.models.audit import AuditEvent
 from app.models.enums import AuditSeverity, UserRole
 from app.models.ngo import NgoPartner
@@ -255,11 +256,13 @@ def activate_ngo_partner(
     ngo.is_active = req.is_active
     ngo.updated_at = datetime.now(timezone.utc)
 
-    # Synchronously update associated user accounts so existing login sessions cannot act
+    # Synchronously update associated user accounts and revoke sessions so deactivated users cannot act
     associated_users = db.query(User).filter(User.ngo_id == ngo_id).all()
     for u in associated_users:
         u.is_active = req.is_active
         u.updated_at = datetime.now(timezone.utc)
+        if not req.is_active:
+            invalidate_all_user_sessions(db, u.id)
 
     action_label = "ACTIVATED" if req.is_active else "DEACTIVATED"
     reason_note = f' Reason: "{req.reason.strip()}"' if req.reason and req.reason.strip() else ""

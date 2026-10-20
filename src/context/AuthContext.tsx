@@ -17,34 +17,38 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Verified institutional demo seed credentials
-export const DEMO_ROLE_CREDENTIALS: Record<UserRole, { identifier: string; pass: string; label: string }> = {
-  student: {
-    identifier: 'student_shreya',
-    pass: 'DevStudentPass123!',
-    label: 'Student (Shreya Pingalwad)',
-  },
-  kitchen: {
-    identifier: 'chef_rajesh',
-    pass: 'DevKitchenPass123!',
-    label: 'Kitchen Head (Chef Rajesh)',
-  },
-  manager: {
-    identifier: 'dr_anita_roy',
-    pass: 'DevManagerPass123!',
-    label: 'Dining Manager (Dr. Anita Roy)',
-  },
-  ngo: {
-    identifier: 'rha_arunav',
-    pass: 'DevNgoPass123!',
-    label: 'NGO Partner (Arunav Sharma)',
-  },
-  admin: {
-    identifier: 'sys_admin',
-    pass: 'DevAdminPass123!',
-    label: 'System Admin (Campus Dining Gov)',
-  },
-};
+// Strict production isolation: demo credentials are ONLY available during local development
+export const isDevEnvironment: boolean = import.meta.env.DEV;
+
+export const DEMO_ROLE_CREDENTIALS: Record<UserRole, { identifier: string; pass: string; label: string }> = import.meta.env.DEV
+  ? {
+      student: {
+        identifier: 'student_shreya',
+        pass: 'DevStudentPass123!',
+        label: 'Student (Shreya Pingalwad)',
+      },
+      kitchen: {
+        identifier: 'chef_rajesh',
+        pass: 'DevKitchenPass123!',
+        label: 'Kitchen Head (Chef Rajesh)',
+      },
+      manager: {
+        identifier: 'dr_anita_roy',
+        pass: 'DevManagerPass123!',
+        label: 'Dining Manager (Dr. Anita Roy)',
+      },
+      ngo: {
+        identifier: 'rha_arunav',
+        pass: 'DevNgoPass123!',
+        label: 'NGO Partner (Arunav Sharma)',
+      },
+      admin: {
+        identifier: 'sys_admin',
+        pass: 'DevAdminPass123!',
+        label: 'System Admin (Campus Dining Gov)',
+      },
+    }
+  : ({} as Record<UserRole, { identifier: string; pass: string; label: string }>);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<ApiUser | null>(null);
@@ -104,8 +108,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchDevRole = async (targetRole: UserRole) => {
+    if (!isDevEnvironment) {
+      throw new Error('Demo authentication mode is strictly disabled in production builds.');
+    }
     const creds = DEMO_ROLE_CREDENTIALS[targetRole];
-    if (!creds) return;
+    if (!creds || !creds.pass) {
+      throw new Error('Demo credentials are not available.');
+    }
     await login(creds.identifier, creds.pass);
   };
 

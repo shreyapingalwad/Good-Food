@@ -7,6 +7,7 @@ FastAPI endpoints for Dining Facility Managers:
 """
 from datetime import date, datetime, timedelta, timezone
 import logging
+import math
 from typing import Dict, List, Optional
 import uuid
 
@@ -772,7 +773,7 @@ def predict_preparation_demand(
     )
 
     # Establish baseline headcount
-    if req.expected_attendance is not None and req.expected_attendance > 0:
+    if req.expected_attendance is not None:
         headcount = req.expected_attendance
     elif logs:
         headcount = int(round(sum(k.expected_attendance for k in logs) / len(logs)))
@@ -785,6 +786,27 @@ def predict_preparation_demand(
             MealType.DINNER: 1300,
         }
         headcount = defaults.get(req.meal_type, 1000)
+
+    # Handle zero headcount cancellation edge case
+    if headcount == 0:
+        return ForecastResponse(
+            facility_id=facility,
+            meal_type=req.meal_type.value if hasattr(req.meal_type, "value") else str(req.meal_type),
+            date=target_date,
+            expected_attendance=0,
+            historical_baseline_kg=0.0,
+            ml_predicted_kg=0.0,
+            recommended_preparation_kg=0.0,
+            safety_buffer_percent=0.0,
+            safety_buffer_kg=0.0,
+            confidence_score=100.0,
+            mae_kg=0.0,
+            rmse_kg=0.0,
+            feature_contributions=[],
+            is_historical_data=bool(logs),
+            disclaimer="Zero demand requested: Headcount is 0, no kitchen food preparation required.",
+            generated_at=datetime.now(timezone.utc).isoformat(),
+        )
 
     # Establish historical consumption per capita (kg/person)
     if logs:
@@ -866,11 +888,35 @@ def predict_preparation_demand(
         )
     )
 
-    # 4. Evaluation metrics (MAE / RMSE calculated from empirical variance)
-    variance_factor = 0.04 if logs else 0.06
-    mae = round(ml_predicted_kg * variance_factor, 1)
-    rmse = round(ml_predicted_kg * (variance_factor * 1.35), 1)
-    confidence = round(min(98.5, max(85.0, 96.4 - (5.0 if not logs else 0.0))), 1)
+    # 4. Evaluation metrics (calibrated against historical logs vs cold-start heuristic)
+    if logs:
+        # Calculate sample MAE and RMSE from historical production vs consumption records
+        errors = [
+            abs(k.actual_prepared_kg - k.consumed_kg)
+            for k in logs
+            if k.actual_prepared_kg is not None and k.consumed_kg is not None
+        ]
+        if errors:
+            mae = round(sum(errors) / len(errors), 1)
+            rmse = round(math.sqrt(sum(e**2 for e in errors) / len(errors)), 1)
+        else:
+            mae = round(ml_predicted_kg * 0.04, 1)
+            rmse = round(ml_predicted_kg * 0.055, 1)
+        err_ratio = (mae / baseline_kg) if baseline_kg > 0 else 0.05
+        confidence = round(min(98.5, max(75.0, 98.0 - (err_ratio * 50.0))), 1)
+        disclaimer = (
+            f"Empirically calibrated prediction derived from {len(logs)} historical kitchen log(s) "
+            "for this meal type with observed sample MAE and RMSE error metrics."
+        )
+    else:
+        # Cold start heuristic without historical records
+        mae = round(ml_predicted_kg * 0.12, 1)
+        rmse = round(ml_predicted_kg * 0.16, 1)
+        confidence = 58.0
+        disclaimer = (
+            "Cold-start heuristic estimate: No historical kitchen logs available for this facility "
+            "and meal slot. Confidence score is an uncalibrated baseline."
+        )
 
     return ForecastResponse(
         facility_id=facility,
@@ -887,6 +933,7 @@ def predict_preparation_demand(
         rmse_kg=rmse,
         feature_contributions=contributions,
         is_historical_data=bool(logs),
+        disclaimer=disclaimer,
         generated_at=datetime.now(timezone.utc).isoformat(),
     )
 

@@ -139,7 +139,7 @@ class ForecastRequest(BaseModel):
     facility_id: Optional[str] = None
     date: Optional[str] = Field(default=None, description="Target forecast date YYYY-MM-DD")
     meal_type: MealType = Field(default=MealType.LUNCH, description="Target meal slot")
-    expected_attendance: Optional[int] = Field(default=None, ge=1, le=10000, description="Headcount or advance opt-ins")
+    expected_attendance: Optional[int] = Field(default=None, ge=0, le=10000, description="Headcount or advance opt-ins")
     day_of_week: Optional[int] = Field(default=None, ge=0, le=6, description="0=Monday, 6=Sunday")
     is_holiday: bool = Field(default=False)
     is_exam_period: bool = Field(default=False)

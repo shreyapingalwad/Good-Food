@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth, DEMO_ROLE_CREDENTIALS } from '../../context/AuthContext';
+import { useAuth, DEMO_ROLE_CREDENTIALS, isDevEnvironment } from '../../context/AuthContext';
 import { UserRole } from '../../types';
 import { 
   Lock, 
@@ -161,43 +161,45 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, targetRol
           </button>
         </form>
 
-        {/* Demo Fast-Login Pill Buttons */}
-        <div className="pt-4 border-t border-[#28312B] space-y-3">
-          <div className="flex items-center justify-between text-[11px] text-[#A9B7A0]">
-            <span className="font-mono flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#D8F078]" />
-              Quick Demo Authentications:
-            </span>
-            <span className="text-[10px] text-[#A9B7A0]/60">Evaluator mode</span>
-          </div>
+        {/* Demo Fast-Login Pill Buttons (strictly hidden and stripped in production builds) */}
+        {isDevEnvironment && Object.keys(DEMO_ROLE_CREDENTIALS).length > 0 && (
+          <div className="pt-4 border-t border-[#28312B] space-y-3">
+            <div className="flex items-center justify-between text-[11px] text-[#A9B7A0]">
+              <span className="font-mono flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#D8F078]" />
+                Quick Demo Authentications:
+              </span>
+              <span className="text-[10px] text-[#A9B7A0]/60">Evaluator mode</span>
+            </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {(Object.keys(DEMO_ROLE_CREDENTIALS) as UserRole[]).map((r) => {
-              const RoleIcon = roleIcons[r];
-              const creds = DEMO_ROLE_CREDENTIALS[r];
-              const isTarget = targetRole === r;
-              return (
-                <button
-                  key={r}
-                  type="button"
-                  disabled={isLoading}
-                  onClick={() => handleQuickRole(r)}
-                  className={`p-2.5 rounded-xl text-left border transition-all text-xs flex items-center gap-2 ${
-                    isTarget
-                      ? 'bg-[#123B2A] border-[#D8F078]/50 text-[#D8F078] font-bold shadow-sm'
-                      : 'bg-[#1C221E] border-[#28312B] text-[#A9B7A0] hover:text-[#F7F5EF] hover:border-[#D8F078]/30'
-                  }`}
-                >
-                  <RoleIcon className="w-4 h-4 text-[#D8F078] shrink-0" />
-                  <div className="truncate">
-                    <div className="capitalize leading-tight font-semibold">{r}</div>
-                    <div className="text-[10px] text-[#A9B7A0] truncate">{creds.identifier}</div>
-                  </div>
-                </button>
-              );
-            })}
+            <div className="grid grid-cols-2 gap-2">
+              {(Object.keys(DEMO_ROLE_CREDENTIALS) as UserRole[]).map((r) => {
+                const RoleIcon = roleIcons[r];
+                const creds = DEMO_ROLE_CREDENTIALS[r];
+                const isTarget = targetRole === r;
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => handleQuickRole(r)}
+                    className={`p-2.5 rounded-xl text-left border transition-all text-xs flex items-center gap-2 ${
+                      isTarget
+                        ? 'bg-[#123B2A] border-[#D8F078]/50 text-[#D8F078] font-bold shadow-sm'
+                        : 'bg-[#1C221E] border-[#28312B] text-[#A9B7A0] hover:text-[#F7F5EF] hover:border-[#D8F078]/30'
+                    }`}
+                  >
+                    <RoleIcon className="w-4 h-4 text-[#D8F078] shrink-0" />
+                    <div className="truncate">
+                      <div className="capitalize leading-tight font-semibold">{r}</div>
+                      <div className="text-[10px] text-[#A9B7A0] truncate">{creds.identifier}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
     </div>
