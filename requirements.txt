@@ -1,0 +1,2 @@
+# Root requirements file for Render / PaaS deployment
+-r backend/requirements.txt
