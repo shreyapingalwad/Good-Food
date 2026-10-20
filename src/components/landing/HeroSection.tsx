@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { HeroFoodScene } from '../3d/HeroFoodScene';
-import { ArrowRight, Play, Sparkles, ShieldCheck, HeartHandshake, TrendingDown } from 'lucide-react';
+import { ArrowRight, Play, ShieldCheck, HeartHandshake, TrendingDown } from 'lucide-react';
 import { UserRole } from '../../types';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface HeroSectionProps {
   onExplore: (role: UserRole) => void;
@@ -9,16 +13,62 @@ interface HeroSectionProps {
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItWorks }) => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const textContentRef = useRef<HTMLDivElement>(null);
+  const sceneWrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const ctx = gsap.context(() => {
+      if (textContentRef.current && sectionRef.current) {
+        gsap.to(textContentRef.current, {
+          y: -40,
+          opacity: 0.45,
+          ease: 'power1.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top top',
+            end: 'bottom 40%',
+            scrub: 0.8,
+            invalidateOnRefresh: true,
+          }
+        });
+      }
+
+      if (sceneWrapperRef.current && sectionRef.current) {
+        gsap.to(sceneWrapperRef.current, {
+          y: 60,
+          scale: 0.94,
+          ease: 'power1.out',
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top top',
+            end: 'bottom 20%',
+            scrub: 1,
+            invalidateOnRefresh: true,
+          }
+        });
+      }
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="relative min-h-[92vh] pt-28 pb-16 flex items-center justify-center overflow-hidden bg-mesh-pattern">
+    <section 
+      ref={sectionRef} 
+      className="relative min-h-[92vh] pt-28 pb-16 flex items-center justify-center overflow-hidden bg-mesh-pattern"
+    >
       {/* Background radial glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-[#123B2A]/40 rounded-full blur-[140px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
-          {/* Left Hero Content */}
-          <div className="lg:col-span-7 text-left space-y-6">
+          {/* Left Hero Content with Scroll-Triggered Parallax */}
+          <div ref={textContentRef} className="lg:col-span-7 text-left space-y-6 will-change-transform">
             
             {/* Live Status Pill */}
             <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#1C221E] border border-[#D8F078]/25 text-xs text-[#F7F5EF] shadow-lg">
@@ -41,10 +91,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItW
 
             {/* Supporting Text */}
             <p className="text-base sm:text-lg text-[#A9B7A0] max-w-xl font-normal leading-relaxed">
-              Predict meal demand, prevent avoidable waste, and connect surplus food with communities that need it. An AI-engineered institutional dining ecosystem.
+              Predict meal demand, prevent avoidable waste, and connect surplus food with verified shelter networks. An AI-engineered institutional dining ecosystem.
             </p>
 
-            {/* CTAs */}
+            {/* Action CTAs */}
             <div className="pt-2 flex flex-wrap items-center gap-4">
               <button
                 onClick={() => onExplore('student')}
@@ -65,10 +115,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItW
               </button>
             </div>
 
-            {/* Trust and Key Capabilities Badges */}
+            {/* Trust & Performance Telemetry Badges */}
             <div className="pt-8 border-t border-[#28312B]/80 grid grid-cols-3 gap-4 max-w-lg">
               <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs text-[#D8F078] font-mono">
+                <div className="flex items-center gap-1.5 text-xs text-[#D8F078] font-mono font-semibold">
                   <TrendingDown className="w-3.5 h-3.5" />
                   <span>-38%</span>
                 </div>
@@ -76,7 +126,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItW
               </div>
 
               <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs text-[#D8F078] font-mono">
+                <div className="flex items-center gap-1.5 text-xs text-[#D8F078] font-mono font-semibold">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>100%</span>
                 </div>
@@ -84,7 +134,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItW
               </div>
 
               <div className="space-y-1">
-                <div className="flex items-center gap-1.5 text-xs text-[#D8F078] font-mono">
+                <div className="flex items-center gap-1.5 text-xs text-[#D8F078] font-mono font-semibold">
                   <HeartHandshake className="w-3.5 h-3.5" />
                   <span>90 min</span>
                 </div>
@@ -94,29 +144,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExplore, onSeeHowItW
 
           </div>
 
-          {/* Right Column: Interactive 3D Food Hero Scene */}
-          <div className="lg:col-span-5 relative flex items-center justify-center">
+          {/* Right Column: Interactive 3D Food Hero Scene with Scroll Handover */}
+          <div ref={sceneWrapperRef} className="lg:col-span-5 relative flex items-center justify-center will-change-transform">
             <div className="w-full relative">
-              {/* 3D Scene */}
               <HeroFoodScene />
-
-              {/* Floating Stat Card Over 3D */}
-              <div className="absolute top-4 right-2 sm:right-6 glass-panel-elevated p-3.5 rounded-2xl max-w-[210px] pointer-events-none border border-[#D8F078]/20 hidden sm:block animate-float-slow">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#D8F078]" />
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-[#D8F078]">Smart Headcount</span>
-                </div>
-                <div className="text-xl font-bold font-editorial text-[#F7F5EF]">1,420 Opt-ins</div>
-                <p className="text-[11px] text-[#A9B7A0] mt-0.5 leading-snug">
-                  Lunch target: 284 kg (-18kg vs static estimate)
-                </p>
-              </div>
-
-              {/* Floating Environmental Pill */}
-              <div className="absolute bottom-6 right-8 glass-panel px-4 py-2.5 rounded-2xl text-xs text-[#F7F5EF] border border-[#687B4B]/30 hidden sm:flex items-center gap-3">
-                <Sparkles className="w-4 h-4 text-[#D8F078]" />
-                <span className="font-mono text-[11px] text-[#A9B7A0]">Methane avoidance active</span>
-              </div>
             </div>
           </div>
 

@@ -1,14 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShieldCheck, Thermometer, Clock, Lock, CheckCircle, AlertTriangle, Truck } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const RedistributionStory: React.FC = () => {
   const [secondsRemaining, setSecondsRemaining] = useState<number>(4500); // 75 mins
+  const sectionRef = useRef<HTMLElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const stepsGridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setSecondsRemaining(prev => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const ctx = gsap.context(() => {
+      if (bannerRef.current) {
+        gsap.from(bannerRef.current, {
+          y: 30,
+          opacity: 0,
+          duration: 0.8,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: bannerRef.current,
+            start: 'top 85%',
+            toggleActions: 'play none none none'
+          }
+        });
+      }
+
+      if (stepsGridRef.current) {
+        gsap.from(stepsGridRef.current.children, {
+          y: 40,
+          opacity: 0,
+          duration: 0.75,
+          stagger: 0.15,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: stepsGridRef.current,
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+          }
+        });
+      }
+    }, sectionRef);
+
+    return () => ctx.revert();
   }, []);
 
   const formatTime = (secs: number) => {
@@ -57,7 +102,11 @@ export const RedistributionStory: React.FC = () => {
   ];
 
   return (
-    <section id="redistribution" className="relative py-28 bg-[#123B2A]/20 border-t border-[#28312B] overflow-hidden">
+    <section 
+      id="redistribution" 
+      ref={sectionRef} 
+      className="relative py-28 bg-[#123B2A]/20 border-t border-[#28312B] overflow-hidden"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
@@ -78,7 +127,10 @@ export const RedistributionStory: React.FC = () => {
         </div>
 
         {/* Live Active Countdown Simulation Banner with Imagery */}
-        <div className="mb-12 relative rounded-3xl overflow-hidden border border-[#D8F078]/30 shadow-card-dark">
+        <div 
+          ref={bannerRef}
+          className="mb-12 relative rounded-3xl overflow-hidden border border-[#D8F078]/30 shadow-card-dark"
+        >
           <div className="absolute inset-0 z-0">
             <img 
               src="https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1200&q=80" 
@@ -119,7 +171,7 @@ export const RedistributionStory: React.FC = () => {
         </div>
 
         {/* 4 Protocol Steps Grid with Photos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div ref={stepsGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {steps.map((st, idx) => {
             const Icon = st.icon;
             return (

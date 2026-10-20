@@ -1,11 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AlertTriangle, CheckCircle2, DollarSign, Flame, Trash2, ShieldAlert, Sparkles, ArrowRight } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export const ProblemSection: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'legacy' | 'messaver'>('messaver');
+  const sectionRef = useRef<HTMLElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const ctx = gsap.context(() => {
+      if (cardsRef.current) {
+        gsap.from(cardsRef.current.children, {
+          y: 45,
+          opacity: 0,
+          duration: 0.8,
+          stagger: 0.18,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: cardsRef.current,
+            start: 'top 80%',
+            toggleActions: 'play none none none'
+          }
+        });
+      }
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <section id="problem" className="relative py-28 bg-[#151916] overflow-hidden">
+    <section id="problem" ref={sectionRef} className="relative py-28 bg-[#151916] overflow-hidden">
       {/* Decorative background glow */}
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-[#123B2A]/30 rounded-full blur-[130px] pointer-events-none" />
 
@@ -58,7 +88,7 @@ export const ProblemSection: React.FC = () => {
         </div>
 
         {/* Photographic Comparison Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+        <div ref={cardsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           
           {/* Legacy Card with Landfill Imagery Backdrop */}
           <div className={`relative rounded-3xl overflow-hidden transition-all duration-300 border flex flex-col justify-between ${
@@ -67,11 +97,11 @@ export const ProblemSection: React.FC = () => {
               : 'border-[#28312B] opacity-80'
           }`}>
             {/* Background Photography with Gradient Overlay */}
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 overflow-hidden">
               <img 
                 src="https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=1000&q=80" 
                 alt="Landfill food waste crisis"
-                className="w-full h-full object-cover filter grayscale contrast-125 opacity-25"
+                className="w-full h-full object-cover filter grayscale contrast-125 opacity-25 transition-transform duration-700 hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#151916] via-[#1C221E]/95 to-[#1C221E]/90" />
             </div>
@@ -132,61 +162,61 @@ export const ProblemSection: React.FC = () => {
               : 'border-[#28312B] opacity-80'
           }`}>
             {/* Background Photography with Gradient Overlay */}
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 overflow-hidden">
               <img 
                 src="https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1000&q=80" 
                 alt="Fresh organic produce harvest"
-                className="w-full h-full object-cover filter brightness-90 contrast-110 opacity-35"
+                className="w-full h-full object-cover filter brightness-90 contrast-110 opacity-35 transition-transform duration-700 hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#151916] via-[#123B2A]/90 to-[#1C221E]/85" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#151916] via-[#123B2A]/90 to-[#123B2A]/80" />
             </div>
 
             <div className="relative z-10 p-8 space-y-6">
               <div className="flex items-center justify-between pb-6 border-b border-[#28312B]">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-[#123B2A] border border-[#D8F078]/40 flex items-center justify-center text-[#D8F078]">
-                    <CheckCircle2 className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-xl bg-[#D8F078]/15 border border-[#D8F078]/30 flex items-center justify-center text-[#D8F078]">
+                    <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-[#F7F5EF]">MessSaver Intelligent Platform</h3>
-                    <p className="text-xs text-[#D8F078]">Continuous feedback loop & safety chain</p>
+                    <h3 className="text-lg font-bold text-[#F7F5EF]">MessSaver Intelligence</h3>
+                    <p className="text-xs text-[#D8F078] font-mono">Predictive Closed-Loop</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30">
-                  Zero Avoidable Waste
+                <span className="text-xs font-mono px-3 py-1 rounded-full bg-[#D8F078]/15 text-[#D8F078] border border-[#D8F078]/30 font-bold">
+                  High Yield
                 </span>
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#123B2A]/60 border border-[#D8F078]/25 backdrop-blur-md">
-                  <Sparkles className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
-                  <div>
-                    <div className="text-xs font-bold text-[#F7F5EF]">Real-time Student Opt-in Signal</div>
-                    <p className="text-xs text-[#A9B7A0] mt-0.5">Students log meal attendance before the service cutoff, reducing head-count uncertainty from ±30% down to &lt; 2%.</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#123B2A]/60 border border-[#D8F078]/25 backdrop-blur-md">
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#151916]/85 border border-[#D8F078]/25 backdrop-blur-md">
                   <CheckCircle2 className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-xs font-bold text-[#F7F5EF]">Strict Edible vs Plate Waste Separation</div>
-                    <p className="text-xs text-[#A9B7A0] mt-0.5">Kitchen surplus is packed hot at 65°C+ into sealed containers; plate leftovers go to local vermicompost bio-digestion.</p>
+                    <div className="text-xs font-bold text-[#F7F5EF]">Audited Opt-In Headcounts</div>
+                    <p className="text-xs text-[#A9B7A0] mt-0.5">Students confirm attendance 2 hours prior; Random Forest model correlates weather & exam schedules to compute batch sizes.</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#123B2A]/60 border border-[#D8F078]/25 backdrop-blur-md">
-                  <ArrowRight className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#151916]/85 border border-[#D8F078]/25 backdrop-blur-md">
+                  <CheckCircle2 className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-xs font-bold text-[#F7F5EF]">90-Minute Fast NGO Handover</div>
-                    <p className="text-xs text-[#A9B7A0] mt-0.5">Verified local shelter partners receive automated dispatch notifications, claiming and picking up safe food with 4-digit PIN verification.</p>
+                    <div className="text-xs font-bold text-[#F7F5EF]">Strict Kitchen Segregation</div>
+                    <p className="text-xs text-[#A9B7A0] mt-0.5">Unserved hotel pans never mix with plate scraps. Edible surplus is preserved in sanitary conditions for community distribution.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-[#151916]/85 border border-[#D8F078]/25 backdrop-blur-md">
+                  <CheckCircle2 className="w-5 h-5 text-[#D8F078] shrink-0 mt-0.5" />
+                  <div>
+                    <div className="text-xs font-bold text-[#F7F5EF]">Automated NGO Dispatch</div>
+                    <p className="text-xs text-[#A9B7A0] mt-0.5">Surplus alerts broadcast instantly to verified shelters with 90-minute holding windows and PIN-verified pickup handovers.</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="relative z-10 p-6 mx-8 mb-6 rounded-2xl bg-[#123B2A]/90 border border-[#D8F078]/40 shadow-glow-lime flex items-center justify-between text-xs text-[#A9B7A0]">
-              <span className="text-[#F7F5EF] font-medium">Result: 100% Edible Surplus Diverted</span>
-              <span className="font-mono text-[#D8F078] font-bold">110 meals saved per shift</span>
+            <div className="relative z-10 p-6 mx-8 mb-6 rounded-2xl bg-[#151916]/90 border border-[#D8F078]/30 flex items-center justify-between text-xs text-[#A9B7A0]">
+              <span>Result: Preserved & redistributed</span>
+              <span className="font-mono text-[#D8F078] font-bold">0% avoidable waste to landfill</span>
             </div>
           </div>
 

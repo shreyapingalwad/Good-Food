@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserRole } from './types';
 import { Navbar } from './components/landing/Navbar';
 import { HeroSection } from './components/landing/HeroSection';
@@ -12,6 +12,10 @@ import { TechEngineSection } from './components/landing/TechEngineSection';
 import { CtaSection } from './components/landing/CtaSection';
 import { Footer } from './components/landing/Footer';
 import { AssetManifestModal } from './components/landing/AssetManifestModal';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 // Portals
 import { PortalShell } from './components/portals/PortalShell';
@@ -25,6 +29,14 @@ export const App: React.FC = () => {
   const [activeView, setActiveView] = useState<'landing' | 'portal'>('landing');
   const [currentRole, setCurrentRole] = useState<UserRole>('student');
   const [isAssetManifestOpen, setIsAssetManifestOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    // When view changes, refresh ScrollTrigger after DOM has settled
+    const timeout = setTimeout(() => {
+      ScrollTrigger.refresh();
+    }, 150);
+    return () => clearTimeout(timeout);
+  }, [activeView, currentRole]);
 
   const handleSelectRole = (role: UserRole) => {
     setCurrentRole(role);
@@ -106,3 +118,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+
