@@ -2,9 +2,9 @@ name: MessSaver CI & Release Verification
 
 on:
   push:
-    branches: [ main, develop, "feat/**" ]
+    branches: [ main, develop, "feat/**", "verify/**" ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   backend-checks:
