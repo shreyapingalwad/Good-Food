@@ -31,7 +31,14 @@ from app.schemas.kitchen import (
     KitchenLogResponse,
     KitchenSummaryResponse,
 )
-from app.schemas.ngo import NgoPartnerBase, NgoPartnerCreate, NgoPartnerRead
+from app.schemas.ngo import (
+    NgoActivateRequest,
+    NgoListResponse,
+    NgoPartnerBase,
+    NgoPartnerCreate,
+    NgoPartnerRead,
+    NgoVerifyRequest,
+)
 from app.schemas.donation import (
     DishItem,
     DonationClaimRequest,
@@ -44,8 +51,30 @@ from app.schemas.donation import (
     SurplusDonationListResponse,
     SurplusDonationRead,
 )
-from app.schemas.audit import AuditEventBase, AuditEventCreate, AuditEventRead
-from app.schemas.system_config import SystemConfigBase, SystemConfigCreate, SystemConfigRead
+from app.schemas.audit import (
+    AuditEventBase,
+    AuditEventCreate,
+    AuditEventRead,
+    AuditLogListResponse,
+)
+from app.schemas.system_config import (
+    SystemConfigBase,
+    SystemConfigCreate,
+    SystemConfigListResponse,
+    SystemConfigRead,
+    SystemConfigUpdateRequest,
+)
+from app.schemas.manager import (
+    DonationSummaryResponse,
+    FoodWasteSummaryResponse,
+    ForecastInputsResponse,
+    ManagerOverviewResponse,
+    MealTypeWasteBreakdown,
+    NgoRedistributionStat,
+    SafetyBufferConfigResponse,
+    SafetyBufferOverrideRequest,
+    WasteTrendItem,
+)
 from app.schemas.auth import (
     CurrentUserResponse,
     LoginRequest,
@@ -83,9 +112,16 @@ __all__ = [
     "KitchenLogBase",
     "KitchenLogCreate",
     "KitchenLogRead",
+    "KitchenLogCreateRequest",
+    "KitchenLogResponse",
+    "KitchenLogHistoryResponse",
+    "KitchenSummaryResponse",
     "NgoPartnerBase",
     "NgoPartnerCreate",
     "NgoPartnerRead",
+    "NgoVerifyRequest",
+    "NgoActivateRequest",
+    "NgoListResponse",
     "DishItem",
     "SurplusDonationBase",
     "SurplusDonationCreate",
@@ -99,9 +135,21 @@ __all__ = [
     "AuditEventBase",
     "AuditEventCreate",
     "AuditEventRead",
+    "AuditLogListResponse",
     "SystemConfigBase",
     "SystemConfigCreate",
     "SystemConfigRead",
+    "SystemConfigUpdateRequest",
+    "SystemConfigListResponse",
+    "ManagerOverviewResponse",
+    "FoodWasteSummaryResponse",
+    "WasteTrendItem",
+    "MealTypeWasteBreakdown",
+    "DonationSummaryResponse",
+    "NgoRedistributionStat",
+    "ForecastInputsResponse",
+    "SafetyBufferOverrideRequest",
+    "SafetyBufferConfigResponse",
     "CurrentUserResponse",
     "LoginRequest",
     "LoginResponse",
@@ -110,5 +158,3 @@ __all__ = [
     "PinRecoveryResponse",
     "SessionCleanupResponse",
 ]
-
-

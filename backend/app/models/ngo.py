@@ -21,6 +21,7 @@ class NgoPartner(Base):
     total_pickups_completed = Column(Integer, default=0, nullable=False)
     meals_distributed = Column(Integer, default=0, nullable=False)
     logo_url = Column(String(1024), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False, index=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
@@ -30,4 +31,4 @@ class NgoPartner(Base):
     donations = relationship("SurplusDonation", back_populates="claimed_by_ngo", foreign_keys="SurplusDonation.claimed_by_ngo_id")
 
     def __repr__(self) -> str:
-        return f"<NgoPartner {self.id}: {self.name} (verified={self.verified})>"
+        return f"<NgoPartner {self.id}: {self.name} (verified={self.verified}, active={self.is_active})>"

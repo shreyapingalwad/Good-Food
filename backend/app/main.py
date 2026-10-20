@@ -10,6 +10,8 @@ from app.api.attendance import router as attendance_router
 from app.api.ratings import router as ratings_router
 from app.api.kitchen import router as kitchen_router
 from app.api.surplus import router as surplus_router
+from app.api.manager import router as manager_router
+from app.api.admin import router as admin_router
 from app.core.config import get_settings
 
 logger = logging.getLogger("messaver.backend")
@@ -85,6 +87,12 @@ def create_application() -> FastAPI:
 
     # Mount Surplus Redistribution Endpoints
     app.include_router(surplus_router, prefix=f"{settings.API_V1_STR}/surplus")
+
+    # Mount Manager Operations Endpoints
+    app.include_router(manager_router, prefix=f"{settings.API_V1_STR}/manager")
+
+    # Mount Admin Governance Endpoints
+    app.include_router(admin_router, prefix=f"{settings.API_V1_STR}/admin")
 
     return app
 

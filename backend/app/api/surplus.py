@@ -433,6 +433,12 @@ def claim_surplus_donation(
             detail="Only verified NGO partners are eligible to claim surplus donations.",
         )
 
+    if not ngo.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="NGO partner organization has been deactivated by administrators.",
+        )
+
     # 3. Fetch donation and validate initial state
     donation = db.query(SurplusDonation).filter(SurplusDonation.id == donation_id).first()
     if not donation:

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List
 from pydantic import BaseModel, ConfigDict, Field
 from app.models.enums import AuditSeverity, UserRole
 
@@ -21,3 +22,8 @@ class AuditEventRead(AuditEventBase):
 
     id: str
     created_at: datetime
+
+
+class AuditLogListResponse(BaseModel):
+    items: List[AuditEventRead]
+    total: int
