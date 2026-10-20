@@ -12,13 +12,18 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "0003_add_facility_id_to_kitchen_logs"
+revision: str = "0003_kitchen_facility_id"
 down_revision: Union[str, None] = "0002_add_server_sessions"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    # Ensure alembic_version table can store long revision IDs on PostgreSQL
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        op.execute("ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(128)")
+
     op.add_column(
         "kitchen_logs",
         sa.Column(
