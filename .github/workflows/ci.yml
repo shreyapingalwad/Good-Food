@@ -1,0 +1,95 @@
+name: MessSaver CI & Release Verification
+
+on:
+  push:
+    branches: [ main, develop, "feat/**" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-checks:
+    name: Backend Test & Security Gates
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_ci_password_123
+          POSTGRES_DB: messaver_ci_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install backend dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Alembic migrations against live PostgreSQL
+        env:
+          DATABASE_URL: postgresql+psycopg://postgres:test_ci_password_123@localhost:5432/messaver_ci_test
+        run: |
+          cd backend
+          alembic upgrade head
+
+      - name: Run Full Backend Regression & E2E Test Suite
+        env:
+          DATABASE_URL: postgresql+psycopg://postgres:test_ci_password_123@localhost:5432/messaver_ci_test
+          REDIS_URL: redis://localhost:6379/0
+          ENVIRONMENT: development
+          SESSION_SECRET: ci_session_signing_secret_min_32_characters_long
+          CSRF_SECRET: ci_csrf_signing_secret_min_32_characters_long
+          PIN_PEPPER: ci_secure_pin_pepper_salt
+        run: |
+          python -m pytest backend/tests/ -v
+
+  frontend-checks:
+    name: Frontend Build & Typecheck Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript typecheck and production build
+        run: npm run build
+
+      - name: Verify build artifact integrity
+        run: |
+          test -f dist/index.html || exit 1
+          echo "Frontend distribution bundle verified successfully."
