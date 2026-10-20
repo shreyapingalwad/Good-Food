@@ -25,10 +25,23 @@ logging.basicConfig(
 async def lifespan(app: FastAPI):
     """
     Application startup and shutdown lifecycle.
-    Validates configuration at startup.
+    Validates configuration at startup and idempotently seeds initial demo data in dev/staging.
     """
     settings = get_settings()
     logger.info(f"Starting {settings.PROJECT_NAME} in '{settings.ENVIRONMENT}' mode...")
+
+    # Automatically seed initial dev/demo users, NGOs, and logs if in development or staging
+    if settings.ENVIRONMENT.lower() != "production":
+        try:
+            from app.core.database import get_engine, get_session_factory
+            from app.db.seed import seed_database
+            engine = get_engine()
+            SessionFactory = get_session_factory(engine)
+            with SessionFactory() as session:
+                seed_database(session, environment=settings.ENVIRONMENT)
+        except Exception as e:
+            logger.warning(f"Startup seed skipped or encountered error: {e}")
+
     yield
     logger.info("Shutting down MessSaver backend cleanly...")
 
