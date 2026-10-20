@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-forest: #123B2A;
+    --color-charcoal: #151916;
+    --color-ivory: #F7F5EF;
+    --color-sage: #A9B7A0;
+    --color-olive: #687B4B;
+    --color-lime: #D8F078;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #151916;
+    color: #F7F5EF;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-editorial {
+    font-family: 'DM Serif Display', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #151916;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #28312B;
+    border-radius: 4px;
+    border: 2px solid #151916;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #687B4B;
+  }
+}
+
+/* Custom visual utilities */
+.glass-panel {
+  background: rgba(21, 25, 22, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(169, 183, 160, 0.12);
+}
+
+.glass-panel-elevated {
+  background: rgba(28, 34, 30, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(216, 240, 120, 0.15);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+}
+
+.glass-pill {
+  background: rgba(18, 59, 42, 0.45);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(216, 240, 120, 0.2);
+}
+
+.text-gradient-lime {
+  background: linear-gradient(135deg, #F7F5EF 30%, #D8F078 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-sage {
+  background: linear-gradient(135deg, #F7F5EF 40%, #A9B7A0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-subtle {
+  border-color: rgba(169, 183, 160, 0.15);
+}
+
+/* Atmospheric background mesh */
+.bg-mesh-pattern {
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(18, 59, 42, 0.5) 0%, transparent 40%),
+    radial-gradient(circle at 85% 60%, rgba(104, 123, 75, 0.3) 0%, transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(216, 240, 120, 0.08) 0%, transparent 50%);
+}
+
+.hero-mesh {
+  background-image: 
+    radial-gradient(circle at 50% 25%, rgba(18, 59, 42, 0.65) 0%, transparent 60%),
+    radial-gradient(circle at 80% 30%, rgba(216, 240, 120, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 20% 70%, rgba(104, 123, 75, 0.25) 0%, transparent 50%);
+}
+
+/* Subtle animation helpers */
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+.animate-float-gentle {
+  animation: floatGentle 5s ease-in-out infinite;
+}
