@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { OptimizedImage } from '../common/OptimizedImage';
 import { storageService } from '../../services/storageService';
 import { KitchenLog, SurplusDonation, MealType } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { apiClient, ApiError, SurplusDonationItem } from '../../services/apiClient';
 import { 
   ChefHat, 
   Users, 
@@ -15,12 +17,19 @@ import {
   Thermometer,
   ShieldAlert,
   Clock,
-  Sparkles
+  Sparkles,
+  Info,
+  Loader2,
+  KeyRound,
+  ShieldCheck
 } from 'lucide-react';
 
 export const KitchenPortal: React.FC = () => {
+  const { user, isAuthenticated, switchDevRole } = useAuth();
   const [logs, setLogs] = useState<KitchenLog[]>(storageService.getKitchenLogs());
   const [donations, setDonations] = useState<SurplusDonation[]>(storageService.getDonations());
+  const [isLoadingDonations, setIsLoadingDonations] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
   // Quick Log State
   const [mealType, setMealType] = useState<MealType>('Lunch');
@@ -38,62 +47,216 @@ export const KitchenPortal: React.FC = () => {
   const [isPlateScraps, setIsPlateScraps] = useState<boolean>(false);
   const [isPackedClean, setIsPackedClean] = useState<boolean>(true);
 
+  // Newly created PIN notification
+  const [latestCreatedPin, setLatestCreatedPin] = useState<{ id: string; pin: string } | null>(null);
+
+  // Handover PIN Verification State (Kitchen verifying NGO driver)
+  const [verifyingDonationId, setVerifyingDonationId] = useState<string | null>(null);
+  const [driverPin, setDriverPin] = useState<string>('');
+  const [isVerifyingPin, setIsVerifyingPin] = useState<boolean>(false);
+
   // Status Message
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type });
-    setTimeout(() => setNotification(null), 4000);
+    setTimeout(() => setNotification(null), 5000);
   };
 
-  const handleSaveKitchenLog = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newLog = storageService.addKitchenLog({
-      date: new Date().toISOString().split('T')[0],
-      mealType,
-      dishName,
-      expectedAttendance: 1450,
-      recommendedKg: 118,
-      actualPreparedKg: Number(actualPreparedKg),
-      consumedKg: Number(consumedKg),
-      kitchenSurplusKg: Number(kitchenSurplusKg),
-      plateWasteKg: Number(plateWasteKg),
-      recordedBy: 'Chef Rajesh Kumar',
-      imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80'
-    });
-
-    setLogs([newLog, ...logs]);
-    showNotification(`Recorded ${mealType} production log for "${dishName}".`);
+  // Fetch real facility donations from backend
+  const loadFacilityDonations = async () => {
+    if (!isAuthenticated || user?.role !== 'kitchen') return;
+    setIsLoadingDonations(true);
+    try {
+      const res = await apiClient.surplus.getMyFacility();
+      if (res && res.items) {
+        // Map backend donation items to UI format
+        const mapped: SurplusDonation[] = res.items.map((item: SurplusDonationItem) => ({
+          id: item.id,
+          foodTitle: item.food_title,
+          dishes: item.dishes,
+          totalQuantityKg: item.total_quantity_kg,
+          servingsCount: item.servings_count,
+          mealType: (item.meal_type.charAt(0).toUpperCase() + item.meal_type.slice(1).toLowerCase()) as MealType,
+          preparedAt: item.prepared_at,
+          temperatureAtPackaging: item.temperature_at_packaging,
+          isHygienicallyPacked: item.is_hygienically_packed,
+          isPlateLeftover: false as const,
+          expiryDeadline: item.expiry_deadline,
+          status: item.status as 'AVAILABLE' | 'CLAIMED' | 'COMPLETED' | 'EXPIRED',
+          pickupPin: '••••',
+          kitchenFacility: item.kitchen_facility,
+          pickupLocation: item.pickup_location,
+          beneficiaryTarget: item.beneficiary_target,
+          claimedByNgoId: item.claimed_by_ngo_id,
+          claimedByNgoName: item.claimed_by_ngo_name,
+          claimedAt: item.claimed_at,
+          completedAt: item.completed_at,
+          createdAt: item.created_at,
+          imageUrl: item.image_url || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80'
+        }));
+        setDonations(mapped);
+      }
+    } catch (err) {
+      console.warn('Could not load backend facility donations:', err);
+    } finally {
+      setIsLoadingDonations(false);
+    }
   };
 
-  const handleCreateSurplusOffer = (e: React.FormEvent) => {
+  useEffect(() => {
+    loadFacilityDonations();
+  }, [isAuthenticated, user]);
+
+  const handleSaveKitchenLog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const mealTypeUpper = mealType.toUpperCase() as 'BREAKFAST' | 'LUNCH' | 'SNACKS' | 'DINNER';
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    try {
+      if (isAuthenticated && user?.role === 'kitchen') {
+        await apiClient.kitchen.createLog({
+          date: todayStr,
+          meal_type: mealTypeUpper,
+          dish_name: dishName,
+          headcount_actual: 1450,
+          portions_prepared: Math.round(Number(actualPreparedKg) * 2.5),
+          portions_consumed: Math.round(Number(consumedKg) * 2.5),
+          portions_leftover: Math.round((Number(kitchenSurplusKg) + Number(plateWasteKg)) * 2.5),
+          leftover_handling: kitchenSurplusKg > 0 ? 'SURPLUS_OFFERED' : 'COMPOSTED',
+          notes: `Plate waste: ${plateWasteKg}kg, Unserved surplus: ${kitchenSurplusKg}kg`
+        });
+        showNotification(`Logged shift metrics for "${dishName}" to backend kitchen database.`);
+      } else {
+        const newLog = storageService.addKitchenLog({
+          date: todayStr,
+          mealType,
+          dishName,
+          expectedAttendance: 1450,
+          recommendedKg: 118,
+          actualPreparedKg: Number(actualPreparedKg),
+          consumedKg: Number(consumedKg),
+          kitchenSurplusKg: Number(kitchenSurplusKg),
+          plateWasteKg: Number(plateWasteKg),
+          recordedBy: user?.full_name || 'Chef Rajesh Kumar',
+          imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80'
+        });
+        setLogs([newLog, ...logs]);
+        showNotification(`Recorded ${mealType} production log for "${dishName}". Sign in as Chef to sync backend.`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : 'Failed to record kitchen log on backend.';
+      showNotification(msg, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateSurplusOffer = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const result = storageService.createDonation({
-      foodTitle: surplusTitle,
-      dishes: [{ name: surplusTitle, quantityKg: surplusQuantityKg }],
-      totalQuantityKg: surplusQuantityKg,
-      servingsCount: Math.round(surplusQuantityKg / 0.40),
-      mealType,
-      preparedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      temperatureAtPackaging: surplusTemp,
-      isHygienicallyPacked: isPackedClean,
-      isPlateLeftover: isPlateScraps as false,
-      expiryDeadline: new Date(Date.now() + 105 * 60 * 1000).toISOString(),
-      kitchenFacility: 'Grand Central Mess - Block B',
-      pickupLocation: 'Kitchen Dispatch Gate 3',
-      beneficiaryTarget: 'Verified Local Shelter Partners',
-      imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80'
-    });
-
-    if (!result.success) {
-      showNotification(result.error || 'Failed to dispatch surplus offer.', 'error');
+    if (isPlateScraps) {
+      showNotification('Food safety violation: Plate scrapings are prohibited from human donation.', 'error');
       return;
     }
 
-    setDonations(storageService.getDonations());
-    setIsSurplusModalOpen(false);
-    showNotification(`Surplus offer #${result.donation?.id} created & broadcast to NGO network with Security PIN #${result.donation?.pickupPin}!`);
+    if (surplusTemp > 8.0 && surplusTemp < 60.0) {
+      showNotification(`Food safety violation: Temp ${surplusTemp}°C is in the bacterial danger zone (8°C - 60°C).`, 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const mealTypeUpper = mealType.toUpperCase() as 'BREAKFAST' | 'LUNCH' | 'SNACKS' | 'DINNER';
+    const expiryIso = new Date(Date.now() + 105 * 60 * 1000).toISOString();
+
+    try {
+      if (isAuthenticated && user?.role === 'kitchen') {
+        const res = await apiClient.surplus.createDonation({
+          food_title: surplusTitle,
+          dishes: [{ name: surplusTitle, quantityKg: surplusQuantityKg }],
+          total_quantity_kg: surplusQuantityKg,
+          servings_count: Math.round(surplusQuantityKg / 0.40),
+          meal_type: mealTypeUpper,
+          prepared_at: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          temperature_at_packaging: surplusTemp,
+          is_hygienically_packed: isPackedClean,
+          is_plate_leftover: false,
+          expiry_deadline: expiryIso,
+          pickup_location: 'Kitchen Dispatch Gate 3',
+          beneficiary_target: 'Verified Local Shelter Partners',
+          image_url: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80'
+        });
+
+        setIsSurplusModalOpen(false);
+        setLatestCreatedPin({ id: res.id, pin: res.pickup_pin || '••••' });
+        showNotification(`Surplus offer #${res.id} created & broadcast to NGO network! One-time Security PIN: #${res.pickup_pin}`);
+        await loadFacilityDonations();
+      } else {
+        const result = storageService.createDonation({
+          foodTitle: surplusTitle,
+          dishes: [{ name: surplusTitle, quantityKg: surplusQuantityKg }],
+          totalQuantityKg: surplusQuantityKg,
+          servingsCount: Math.round(surplusQuantityKg / 0.40),
+          mealType,
+          preparedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          temperatureAtPackaging: surplusTemp,
+          isHygienicallyPacked: isPackedClean,
+          isPlateLeftover: false,
+          expiryDeadline: expiryIso,
+          kitchenFacility: 'Grand Central Mess - Block B',
+          pickupLocation: 'Kitchen Dispatch Gate 3',
+          beneficiaryTarget: 'Verified Local Shelter Partners',
+          imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80'
+        });
+
+        if (!result.success) {
+          showNotification(result.error || 'Failed to dispatch surplus offer.', 'error');
+          return;
+        }
+
+        setDonations(storageService.getDonations());
+        setIsSurplusModalOpen(false);
+        showNotification(`Preview: Surplus offer #${result.donation?.id} created with Security PIN #${result.donation?.pickupPin}!`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : 'Failed to create surplus donation.';
+      showNotification(msg, 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerifyDriverHandover = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!verifyingDonationId || !driverPin) return;
+
+    setIsVerifyingPin(true);
+    try {
+      if (isAuthenticated && user?.role === 'kitchen') {
+        const res = await apiClient.surplus.verifyPickup(verifyingDonationId, driverPin);
+        setVerifyingDonationId(null);
+        setDriverPin('');
+        showNotification(res.message || `Handover verified for offer #${verifyingDonationId}!`);
+        await loadFacilityDonations();
+      } else {
+        const result = storageService.verifyHandover(verifyingDonationId, driverPin);
+        if (result.success) {
+          setVerifyingDonationId(null);
+          setDriverPin('');
+          setDonations(storageService.getDonations());
+          showNotification(result.message);
+        } else {
+          showNotification(result.message, 'error');
+        }
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : 'Invalid pickup PIN or verification failed.';
+      showNotification(msg, 'error');
+    } finally {
+      setIsVerifyingPin(false);
+    }
   };
 
   return (
@@ -101,7 +264,7 @@ export const KitchenPortal: React.FC = () => {
       
       {/* Toast Alert Notification */}
       {notification && (
-        <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between shadow-2xl ${
+        <div className={`p-4 rounded-2xl border text-xs font-semibold flex items-center justify-between shadow-2xl animate-in fade-in ${
           notification.type === 'success'
             ? 'bg-[#123B2A] border-[#D8F078]/40 text-[#D8F078] shadow-glow-lime'
             : 'bg-red-950/90 border-red-500/40 text-red-200'
@@ -113,6 +276,49 @@ export const KitchenPortal: React.FC = () => {
               <AlertTriangle className="w-4 h-4 text-red-400" />
             )}
             <span>{notification.message}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Role Banner if not logged in as kitchen */}
+      {(!isAuthenticated || user?.role !== 'kitchen') && (
+        <div className="p-4 rounded-2xl bg-[#1C221E] border border-[#28312B] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-[#A9B7A0]">
+            <Info className="w-4 h-4 text-[#D8F078] shrink-0" />
+            <span>
+              {isAuthenticated
+                ? `Logged in as ${user?.role} (${user?.username}). Connect with a Kitchen profile to record production logs and dispatch verified surplus.`
+                : 'Browsing portal in live preview mode. Sign in to connect with live kitchen database.'}
+            </span>
+          </div>
+          <button
+            onClick={() => switchDevRole('kitchen')}
+            className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30 font-semibold text-[11px] hover:bg-[#123B2A]/80 transition-all shrink-0"
+          >
+            Authenticate as chef_rajesh
+          </button>
+        </div>
+      )}
+
+      {/* Security PIN Handover Notice Card */}
+      {latestCreatedPin && (
+        <div className="p-6 rounded-3xl bg-[#123B2A] border-2 border-[#D8F078] text-[#F7F5EF] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-glow-lime animate-in fade-in">
+          <div className="space-y-1">
+            <span className="text-[10px] font-mono text-[#D8F078] uppercase font-bold tracking-wider">
+              Cryptographic Gate Verification PIN Generated
+            </span>
+            <div className="text-base font-bold">
+              Offer #{latestCreatedPin.id} Dispatched to NGO Network
+            </div>
+            <p className="text-xs text-[#A9B7A0]">
+              Give this 4-digit PIN to the verified NGO driver at Gate 3 upon container inspection.
+            </p>
+          </div>
+          <div className="p-4 rounded-2xl bg-[#151916] border border-[#D8F078]/50 text-center shrink-0">
+            <span className="text-[10px] font-mono text-[#A9B7A0] block">ONE-TIME PICKUP PIN:</span>
+            <span className="text-3xl font-mono font-bold text-[#D8F078] tracking-widest">
+              {latestCreatedPin.pin}
+            </span>
           </div>
         </div>
       )}
@@ -137,10 +343,10 @@ export const KitchenPortal: React.FC = () => {
               <span>Shift: Lunch Service (11:30 AM - 02:30 PM)</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-editorial font-bold text-[#F7F5EF]">
-              Grand Central Mess — Block B Kitchen
+              {user?.facility_id || 'Grand Central Mess — Block B Kitchen'}
             </h2>
             <p className="text-xs text-[#A9B7A0] mt-0.5">
-              Head Chef: Rajesh Kumar • Connected Digital Scales: 3 Units Active
+              Head Chef: {user?.full_name || 'Rajesh Kumar'} • Connected Digital Scales: 3 Units Active
             </p>
           </div>
 
@@ -308,10 +514,11 @@ export const KitchenPortal: React.FC = () => {
           <div className="flex justify-end pt-2">
             <button
               type="submit"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95"
+              disabled={isSubmitting}
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
             >
-              <Send className="w-4 h-4" />
-              <span>Log Shift Batch Metrics</span>
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span>{isSubmitting ? 'Recording Metrics...' : 'Log Shift Batch Metrics'}</span>
             </button>
           </div>
         </form>
@@ -327,7 +534,10 @@ export const KitchenPortal: React.FC = () => {
             </h3>
             <p className="text-xs text-[#A9B7A0]">Surplus offers currently available or claimed by local shelter partners.</p>
           </div>
-          <span className="text-xs font-mono text-[#A9B7A0]">Total {donations.length} records</span>
+          <div className="flex items-center gap-3">
+            {isLoadingDonations && <Loader2 className="w-4 h-4 text-[#D8F078] animate-spin" />}
+            <span className="text-xs font-mono text-[#A9B7A0]">Total {donations.length} records</span>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -355,6 +565,8 @@ export const KitchenPortal: React.FC = () => {
                         ? 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/25'
                         : d.status === 'CLAIMED'
                         ? 'bg-amber-950 text-amber-300 border border-amber-500/30'
+                        : d.status === 'COMPLETED'
+                        ? 'bg-[#123B2A]/60 text-[#D8F078] border border-[#D8F078]/25'
                         : 'bg-[#28312B] text-[#A9B7A0]'
                     }`}>
                       {d.status}
@@ -370,17 +582,37 @@ export const KitchenPortal: React.FC = () => {
                     <span>•</span>
                     <span>Pickup Location: {d.pickupLocation}</span>
                   </div>
+                  {d.claimedByNgoName && (
+                    <div className="text-xs font-mono text-amber-300 mt-1 flex items-center gap-1.5">
+                      <Truck className="w-3.5 h-3.5" />
+                      <span>Claimed by: <strong>{d.claimedByNgoName}</strong></span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Security PIN Display */}
-              <div className="text-right shrink-0">
-                <span className="text-[10px] font-mono text-[#A9B7A0] block">Security Pickup PIN:</span>
-                <span className="text-xl font-mono font-bold text-[#D8F078] tracking-widest">
-                  {d.pickupPin}
-                </span>
-                {d.claimedByNgoName && (
-                  <p className="text-[11px] text-[#A9B7A0] mt-0.5">Claimed by: {d.claimedByNgoName}</p>
+              {/* Handover & Action Buttons */}
+              <div className="flex items-center gap-4 shrink-0">
+                {d.status === 'CLAIMED' ? (
+                  <button
+                    onClick={() => {
+                      setVerifyingDonationId(d.id);
+                      setDriverPin('');
+                    }}
+                    className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center gap-2 transition-all active:scale-95"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    <span>Verify Driver PIN</span>
+                  </button>
+                ) : d.status === 'COMPLETED' ? (
+                  <div className="flex items-center gap-1.5 text-xs font-mono text-[#D8F078] px-3 py-1.5 rounded-xl bg-[#123B2A]/40 border border-[#D8F078]/20">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Handed Over & Verified</span>
+                  </div>
+                ) : (
+                  <span className="text-xs font-mono text-[#A9B7A0] px-3 py-1.5 rounded-xl bg-[#1C221E] border border-[#28312B]">
+                    Awaiting NGO Claim
+                  </span>
                 )}
               </div>
             </div>
@@ -494,13 +726,93 @@ export const KitchenPortal: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95"
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Dispatch Offer</span>
+                  {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  <span>{isSubmitting ? 'Broadcasting...' : 'Dispatch Offer'}</span>
                 </button>
               </div>
 
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* Driver PIN Handover Modal (Kitchen verifying NGO driver) */}
+      {verifyingDonationId && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="driver-pin-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setVerifyingDonationId(null);
+          }}
+        >
+          <div className="glass-panel-elevated w-full max-w-md rounded-3xl p-6 sm:p-8 border border-[#D8F078]/30 space-y-6 shadow-2xl">
+            
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-[10px] font-mono text-[#D8F078] uppercase font-bold">Gate 3 Dispatch Bay</span>
+                <h3 id="driver-pin-modal-title" className="text-xl font-editorial font-bold text-[#F7F5EF] mt-0.5">
+                  Verify Driver Pickup PIN
+                </h3>
+                <p className="text-xs text-[#A9B7A0]">
+                  Enter the 4-digit security PIN provided by the NGO driver for Offer #{verifyingDonationId}.
+                </p>
+              </div>
+              <button
+                onClick={() => setVerifyingDonationId(null)}
+                aria-label="Close driver PIN dialog"
+                className="p-1.5 rounded-xl bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF]"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleVerifyDriverHandover} className="space-y-5">
+              <div className="space-y-2 text-center py-2">
+                <label className="text-xs font-mono text-[#A9B7A0] block">
+                  Driver's 4-Digit Pickup PIN:
+                </label>
+                <input
+                  type="text"
+                  maxLength={4}
+                  value={driverPin}
+                  onChange={(e) => setDriverPin(e.target.value)}
+                  placeholder="• • • •"
+                  className="w-40 mx-auto text-center p-3.5 rounded-2xl bg-[#151916] border border-[#D8F078]/50 text-2xl font-mono font-bold text-[#D8F078] tracking-widest focus:outline-none focus:border-[#D8F078] shadow-inner"
+                  required
+                />
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-[#151916] border border-[#28312B] text-[11px] text-[#A9B7A0] space-y-1">
+                <div className="font-bold text-[#F7F5EF] flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#D8F078]" />
+                  <span>Server Cryptographic Handshake</span>
+                </div>
+                <p>Verifies collector credentials against bcrypt pepper hash in backend database.</p>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setVerifyingDonationId(null)}
+                  className="flex-1 py-3 rounded-xl text-xs font-semibold bg-[#1C221E] text-[#A9B7A0] hover:text-[#F7F5EF] border border-[#28312B]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isVerifyingPin}
+                  className="flex-1 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isVerifyingPin ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  <span>{isVerifyingPin ? 'Verifying...' : 'Verify & Handover'}</span>
+                </button>
+              </div>
             </form>
 
           </div>

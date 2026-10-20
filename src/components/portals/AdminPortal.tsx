@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { storageService } from '../../services/storageService';
 import { NgoPartner, AuditLogItem } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { apiClient, ApiError, AuditEventItem, NgoPartnerItem, SystemConfigResponse } from '../../services/apiClient';
 import { 
   ShieldCheck, 
   Users, 
@@ -18,13 +20,18 @@ import {
   Thermometer,
   ShieldAlert,
   Save,
-  CheckCircle
+  CheckCircle,
+  Info,
+  Loader2
 } from 'lucide-react';
 
 export const AdminPortal: React.FC = () => {
+  const { user, isAuthenticated, switchDevRole } = useAuth();
   const [ngos, setNgos] = useState<NgoPartner[]>(storageService.getNgos());
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(storageService.getAuditLogs());
   const [activeTab, setActiveTab] = useState<'audit' | 'ngos' | 'rules'>('audit');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   
   // Search & Filter
   const [auditSearch, setAuditSearch] = useState<string>('');
@@ -35,26 +42,115 @@ export const AdminPortal: React.FC = () => {
   const [maxHoldingTemp, setMaxHoldingTemp] = useState<number>(60);
   const [holdingWindowMins, setHoldingWindowMins] = useState<number>(120);
 
-  const handleToggleVerify = (ngoId: string) => {
-    storageService.toggleNgoVerification(ngoId);
-    setNgos(storageService.getNgos());
-    setAuditLogs(storageService.getAuditLogs());
-    setNotification('Updated NGO verification credential and appended compliance record.');
-    setTimeout(() => setNotification(null), 3500);
+  const fetchAdminData = async () => {
+    setIsLoading(true);
+    try {
+      if (isAuthenticated && user?.role === 'admin') {
+        const [auditRes, ngosRes, configRes] = await Promise.allSettled([
+          apiClient.admin.getAuditLogs({ limit: 100 }),
+          apiClient.admin.getNgos(),
+          apiClient.admin.getSystemConfig()
+        ]);
+
+        if (auditRes.status === 'fulfilled' && auditRes.value.items) {
+          const mappedAudit: AuditLogItem[] = auditRes.value.items.map((item: AuditEventItem) => ({
+            id: item.id,
+            timestamp: item.timestamp,
+            actorName: item.actor_name,
+            actorRole: (item.actor_role?.toLowerCase() || 'system') as 'student' | 'kitchen' | 'manager' | 'ngo' | 'admin',
+            action: item.action,
+            details: item.details,
+            severity: (item.severity?.toLowerCase() === 'critical' ? 'alert' : (item.severity?.toLowerCase() || 'info')) as 'info' | 'warning' | 'alert' | 'success'
+          }));
+          setAuditLogs(mappedAudit);
+        }
+
+        if (ngosRes.status === 'fulfilled' && ngosRes.value.items) {
+          const mappedNgos: NgoPartner[] = ngosRes.value.items.map((item: NgoPartnerItem) => ({
+            id: item.id,
+            name: item.name,
+            registrationNumber: item.registration_number,
+            contactPerson: item.contact_person,
+            phone: item.phone,
+            vehicleType: item.vehicle_type,
+            verified: item.verified,
+            verificationBadge: item.verified ? 'Verified Redistribution Partner' : 'Pending Verification',
+            totalPickupsCompleted: item.total_pickups_completed,
+            mealsDistributed: item.meals_distributed
+          }));
+          setNgos(mappedNgos);
+        }
+
+        if (configRes.status === 'fulfilled' && configRes.value) {
+          const cfg = configRes.value;
+          if (cfg.attendance_cutoff_hours !== undefined) setCutoffHours(cfg.attendance_cutoff_hours);
+          if (cfg.min_holding_temp_celsius !== undefined) setMaxHoldingTemp(cfg.min_holding_temp_celsius);
+          if (cfg.max_holding_window_minutes !== undefined) setHoldingWindowMins(cfg.max_holding_window_minutes);
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching admin data:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSaveRules = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchAdminData();
+  }, [isAuthenticated, user]);
+
+  const handleToggleVerify = async (ngoId: string, currentVerified: boolean) => {
+    const nextState = !currentVerified;
+    try {
+      if (isAuthenticated && user?.role === 'admin') {
+        await apiClient.admin.verifyNgo(ngoId, nextState);
+        setNotification(`NGO credential ${nextState ? 'verified' : 'revoked'}. Logged to compliance audit.`);
+        await fetchAdminData();
+      } else {
+        storageService.toggleNgoVerification(ngoId);
+        setNgos(storageService.getNgos());
+        setAuditLogs(storageService.getAuditLogs());
+        setNotification(`Preview mode: NGO credential ${nextState ? 'verified' : 'revoked'}. Sign in as Admin to record server change.`);
+      }
+      setTimeout(() => setNotification(null), 4500);
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : 'Failed to update NGO verification.';
+      setNotification(msg);
+      setTimeout(() => setNotification(null), 5000);
+    }
+  };
+
+  const handleSaveRules = async (e: React.FormEvent) => {
     e.preventDefault();
-    storageService.addAudit({
-      actorName: 'System Administrator (Superuser)',
-      actorRole: 'admin',
-      action: 'UPDATE_SYSTEM_RULES',
-      details: `Enforced rules: Cutoff ${cutoffHours}h prior, Min holding temp ${maxHoldingTemp}°C, Expiry window ${holdingWindowMins} mins.`,
-      severity: 'info'
-    });
-    setAuditLogs(storageService.getAuditLogs());
-    setNotification('System food-safety and cutoff rules successfully updated.');
-    setTimeout(() => setNotification(null), 3500);
+    setIsSaving(true);
+    try {
+      if (isAuthenticated && user?.role === 'admin') {
+        await apiClient.admin.updateSystemConfig({
+          attendance_cutoff_hours: cutoffHours,
+          min_holding_temp_celsius: maxHoldingTemp,
+          max_holding_window_minutes: holdingWindowMins
+        });
+        setNotification('System food-safety and cutoff rules successfully updated in database.');
+        await fetchAdminData();
+      } else {
+        storageService.addAudit({
+          actorName: user?.full_name || 'System Administrator (Superuser)',
+          actorRole: 'admin',
+          action: 'UPDATE_SYSTEM_RULES',
+          details: `Enforced rules: Cutoff ${cutoffHours}h prior, Min holding temp ${maxHoldingTemp}°C, Expiry window ${holdingWindowMins} mins.`,
+          severity: 'info'
+        });
+        setAuditLogs(storageService.getAuditLogs());
+        setNotification('Preview mode: Rules saved. Sign in as Admin to persist to backend database.');
+      }
+      setTimeout(() => setNotification(null), 4500);
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : 'Failed to update system rules.';
+      setNotification(msg);
+      setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const filteredLogs = auditLogs.filter(log => 
@@ -68,11 +164,31 @@ export const AdminPortal: React.FC = () => {
       
       {/* Toast Alert */}
       {notification && (
-        <div className="p-4 rounded-2xl bg-[#123B2A] border border-[#D8F078]/40 text-[#D8F078] text-xs font-semibold flex items-center justify-between shadow-glow-lime">
+        <div className="p-4 rounded-2xl bg-[#123B2A] border border-[#D8F078]/40 text-[#D8F078] text-xs font-semibold flex items-center justify-between shadow-glow-lime animate-in fade-in">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-[#D8F078]" />
             <span>{notification}</span>
           </div>
+        </div>
+      )}
+
+      {/* Role Banner if not logged in as Admin */}
+      {(!isAuthenticated || user?.role !== 'admin') && (
+        <div className="p-4 rounded-2xl bg-[#1C221E] border border-[#28312B] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-[#A9B7A0]">
+            <Info className="w-4 h-4 text-[#D8F078] shrink-0" />
+            <span>
+              {isAuthenticated
+                ? `Logged in as ${user?.role} (${user?.username}). Connect with an Administrator profile to manage NGO verification and system rules.`
+                : 'Browsing admin console in live preview mode. Sign in to connect with live governance database.'}
+            </span>
+          </div>
+          <button
+            onClick={() => switchDevRole('admin')}
+            className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30 font-semibold text-[11px] hover:bg-[#123B2A]/80 transition-all shrink-0"
+          >
+            Authenticate as sys_admin
+          </button>
         </div>
       )}
 
@@ -155,7 +271,12 @@ export const AdminPortal: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {filteredLogs.length === 0 ? (
+            {isLoading ? (
+              <div className="p-12 text-center text-xs text-[#A9B7A0] flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 text-[#D8F078] animate-spin" />
+                <span>Loading immutable audit ledger from backend...</span>
+              </div>
+            ) : filteredLogs.length === 0 ? (
               <div className="p-8 text-center text-xs text-[#A9B7A0] font-mono">
                 No audit entries matching search query.
               </div>
@@ -167,7 +288,7 @@ export const AdminPortal: React.FC = () => {
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-[#D8F078] font-bold">#{log.id}</span>
+                      <span className="font-mono text-[#D8F078] font-bold">#{log.id.slice(0, 12)}</span>
                       <span className="font-bold text-[#F7F5EF]">{log.action}</span>
                       <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
                         log.severity === 'warning'
@@ -236,7 +357,7 @@ export const AdminPortal: React.FC = () => {
                 <div className="pt-3 border-t border-[#28312B] flex items-center justify-between">
                   <span className="text-xs text-[#A9B7A0]">Access Authority:</span>
                   <button
-                    onClick={() => handleToggleVerify(ngo.id)}
+                    onClick={() => handleToggleVerify(ngo.id, ngo.verified)}
                     className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
                       ngo.verified
                         ? 'bg-[#1C221E] text-red-400 hover:bg-red-950/40 border border-[#28312B]'
@@ -339,10 +460,11 @@ export const AdminPortal: React.FC = () => {
             <div className="flex justify-end pt-2">
               <button
                 type="submit"
-                className="px-8 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center gap-2 transition-all active:scale-95"
+                disabled={isSaving}
+                className="px-8 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
               >
-                <Save className="w-4 h-4" />
-                <span>Save System Rules</span>
+                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                <span>{isSaving ? 'Saving...' : 'Save System Rules'}</span>
               </button>
             </div>
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { storageService, SEED_MENUS } from '../../services/storageService';
+import { SEED_MENUS } from '../../services/storageService';
 import { MenuItem, MealType } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { apiClient, ApiError } from '../../services/apiClient';
 import { 
   Clock, 
   CheckCircle2, 
@@ -13,54 +15,127 @@ import {
   Lock,
   Sparkles,
   UtensilsCrossed,
-  Info
+  Info,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { OptimizedImage } from '../common/OptimizedImage';
 
 export const StudentPortal: React.FC = () => {
-  const [attendance, setAttendance] = useState<Record<string, boolean>>({});
+  const { user, isAuthenticated, switchDevRole } = useAuth();
+  const [attendance, setAttendance] = useState<Record<string, boolean>>({
+    Breakfast: true,
+    Lunch: true,
+    Snacks: true,
+    Dinner: true
+  });
   const [selectedMeal, setSelectedMeal] = useState<MealType>('Lunch');
   const [ratingModalItem, setRatingModalItem] = useState<MenuItem | null>(null);
   const [starCount, setStarCount] = useState<number>(5);
   const [ratingComment, setRatingComment] = useState<string>('');
   const [feedbackSuccess, setFeedbackSuccess] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [historyCount, setHistoryCount] = useState<number>(0);
 
+  // Fetch verified attendance history from server on mount
   useEffect(() => {
-    setAttendance(storageService.getAttendance());
-  }, []);
+    let isMounted = true;
+    const fetchAttendanceHistory = async () => {
+      if (!isAuthenticated || user?.role !== 'student') return;
+      try {
+        const history = await apiClient.attendance.getHistory(20);
+        if (!isMounted || !Array.isArray(history)) return;
+        setHistoryCount(history.length);
+        
+        // Map today's records if present
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayRecords = history.filter((h: any) => h.date === todayStr);
+        if (todayRecords.length > 0) {
+          const map: Record<string, boolean> = {};
+          todayRecords.forEach((r: any) => {
+            const mealCapital = r.meal_type.charAt(0).toUpperCase() + r.meal_type.slice(1).toLowerCase();
+            map[mealCapital] = Boolean(r.attending);
+          });
+          setAttendance(prev => ({ ...prev, ...map }));
+        }
+      } catch (err) {
+        console.warn('Could not fetch server attendance history:', err);
+      }
+    };
 
-  const handleToggleAttendance = (meal: MealType) => {
+    fetchAttendanceHistory();
+    return () => { isMounted = false; };
+  }, [isAuthenticated, user]);
+
+  const handleToggleAttendance = async (meal: MealType) => {
     const current = attendance[meal] ?? true;
     const next = !current;
-    storageService.setAttendance(meal, next);
-    setAttendance(prev => ({ ...prev, [meal]: next }));
     
-    setFeedbackSuccess(`Updated attendance for ${meal}: ${next ? 'Attending (Portion Prepared)' : 'Not Attending (Portion Saved)'}`);
-    setTimeout(() => setFeedbackSuccess(null), 3500);
+    // Optimistic UI update
+    setAttendance(prev => ({ ...prev, [meal]: next }));
+    setErrorMessage(null);
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    try {
+      if (isAuthenticated && user?.role === 'student') {
+        setIsSubmitting(true);
+        await apiClient.attendance.submit({
+          date: todayStr,
+          meal_type: meal,
+          attending: next
+        });
+        setFeedbackSuccess(`Updated attendance for ${meal}: ${next ? 'Attending (Portion Prepared)' : 'Not Attending (Portion Saved)'}`);
+      } else {
+        setFeedbackSuccess(`Preview mode: ${meal} set to ${next ? 'Attending' : 'Opted Out'}. Sign in as Student to record server audit.`);
+      }
+      setTimeout(() => setFeedbackSuccess(null), 4000);
+    } catch (err: unknown) {
+      setAttendance(prev => ({ ...prev, [meal]: current }));
+      const msg = err instanceof ApiError ? err.message : 'Failed to update attendance on server.';
+      setErrorMessage(msg);
+      setTimeout(() => setErrorMessage(null), 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOpenRating = (item: MenuItem) => {
     setRatingModalItem(item);
     setStarCount(item.avgRating ? Math.round(item.avgRating) : 5);
     setRatingComment('');
+    setErrorMessage(null);
   };
 
-  const handleSubmitRating = (e: React.FormEvent) => {
+  const handleSubmitRating = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ratingModalItem) return;
 
-    storageService.submitRating({
-      dishId: ratingModalItem.id,
-      dishName: ratingModalItem.name,
-      rating: starCount,
-      comment: ratingComment,
-      studentId: 'std-101',
-      timestamp: new Date().toISOString()
-    });
+    setIsSubmitting(true);
+    setErrorMessage(null);
 
-    setRatingModalItem(null);
-    setFeedbackSuccess(`Thank you! Rated "${ratingModalItem.name}" with ${starCount} stars. Feedback submitted to culinary team.`);
-    setTimeout(() => setFeedbackSuccess(null), 3500);
+    try {
+      if (isAuthenticated && user?.role === 'student') {
+        await apiClient.ratings.submit({
+          dish_id: ratingModalItem.id,
+          dish_name: ratingModalItem.name,
+          rating: starCount,
+          comment: ratingComment.trim() || undefined
+        });
+        setFeedbackSuccess(`Thank you! Rated "${ratingModalItem.name}" with ${starCount} stars. Synced with backend culinary forecasting engine.`);
+      } else {
+        setFeedbackSuccess(`Preview rating logged for "${ratingModalItem.name}" (${starCount} stars). Sign in as Student to sync with backend.`);
+      }
+      setRatingModalItem(null);
+      setTimeout(() => setFeedbackSuccess(null), 4500);
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : 'Failed to submit rating to server.';
+      setErrorMessage(msg);
+      setTimeout(() => setErrorMessage(null), 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const currentMenu = SEED_MENUS.find(m => m.mealType === selectedMeal) || SEED_MENUS[0];
@@ -77,12 +152,42 @@ export const StudentPortal: React.FC = () => {
       
       {/* Toast Feedback Alert */}
       {feedbackSuccess && (
-        <div className="p-4 rounded-2xl bg-[#123B2A] border border-[#D8F078]/40 text-[#D8F078] text-xs font-semibold flex items-center justify-between shadow-glow-lime">
+        <div className="p-4 rounded-2xl bg-[#123B2A] border border-[#D8F078]/40 text-[#D8F078] text-xs font-semibold flex items-center justify-between shadow-glow-lime animate-in fade-in">
           <div className="flex items-center gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-[#D8F078]" />
             <span>{feedbackSuccess}</span>
           </div>
-          <span className="font-mono text-[10px] text-[#A9B7A0]">Synchronized with Kitchen Headcount Engine</span>
+          <span className="font-mono text-[10px] text-[#A9B7A0]">Synchronized with Backend API</span>
+        </div>
+      )}
+
+      {/* Error Alert */}
+      {errorMessage && (
+        <div className="p-4 rounded-2xl bg-red-950/90 border border-red-500/40 text-red-200 text-xs font-semibold flex items-center justify-between shadow-2xl animate-in fade-in">
+          <div className="flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-red-400" />
+            <span>{errorMessage}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Role Banner if not logged in as student */}
+      {(!isAuthenticated || user?.role !== 'student') && (
+        <div className="p-4 rounded-2xl bg-[#1C221E] border border-[#28312B] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-[#A9B7A0]">
+            <Info className="w-4 h-4 text-[#D8F078] shrink-0" />
+            <span>
+              {isAuthenticated
+                ? `Logged in as ${user?.role} (${user?.username}). Connect with a Student profile to record verified attendance records.`
+                : 'Browsing portal in live preview mode. Sign in to sync attendance with the backend.'}
+            </span>
+          </div>
+          <button
+            onClick={() => switchDevRole('student')}
+            className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30 font-semibold text-[11px] hover:bg-[#123B2A]/80 transition-all shrink-0"
+          >
+            Authenticate as student_shreya
+          </button>
         </div>
       )}
 
@@ -92,13 +197,17 @@ export const StudentPortal: React.FC = () => {
         {/* User Card */}
         <div className="glass-panel p-6 rounded-3xl border border-[#28312B] flex items-center gap-4">
           <div className="w-14 h-14 rounded-2xl bg-[#123B2A] border border-[#D8F078]/30 flex items-center justify-center text-[#D8F078] font-bold text-xl shadow-sm">
-            SP
+            {user?.full_name ? user.full_name.split(' ').map(n => n[0]).join('') : 'SP'}
           </div>
           <div>
-            <div className="text-base font-bold text-[#F7F5EF]">Sankalp Pingalwad</div>
-            <div className="text-xs text-[#A9B7A0] font-mono">ID: STD-2024-8902 • Hostel Block C</div>
+            <div className="text-base font-bold text-[#F7F5EF]">
+              {user?.full_name || 'Shreya Pingalwad'}
+            </div>
+            <div className="text-xs text-[#A9B7A0] font-mono">
+              ID: {user?.username ? user.username.toUpperCase() : 'STD-2024-8902'} • {user?.facility_id || 'Hostel Block C'}
+            </div>
             <span className="inline-block mt-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-[#1C221E] text-[#D8F078] border border-[#D8F078]/25 font-semibold">
-              Hostel Dining Plan Active
+              {isAuthenticated && user?.role === 'student' ? 'Backend Session Active' : 'Hostel Dining Plan Active'}
             </span>
           </div>
         </div>
@@ -107,8 +216,8 @@ export const StudentPortal: React.FC = () => {
         <div className="glass-panel p-6 rounded-3xl border border-[#28312B] flex items-center justify-between">
           <div className="space-y-1">
             <div className="text-xs font-mono text-[#A9B7A0] uppercase tracking-wider">Attendance Precision</div>
-            <div className="text-3xl font-bold font-editorial text-[#D8F078]">94.8%</div>
-            <p className="text-xs text-[#A9B7A0]">Opt-in accuracy this semester</p>
+            <div className="text-3xl font-bold font-editorial text-[#D8F078]">95.4%</div>
+            <p className="text-xs text-[#A9B7A0]">{historyCount > 0 ? `${historyCount} verified server sessions` : 'Opt-in accuracy this semester'}</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-[#1C221E] border border-[#28312B] flex items-center justify-center text-[#D8F078]">
             <Award className="w-6 h-6" />
@@ -141,8 +250,9 @@ export const StudentPortal: React.FC = () => {
               Toggle your attendance before the configured 2-hour cutoff time so kitchen chefs prepare exact portions.
             </p>
           </div>
-          <div className="px-3.5 py-1.5 rounded-full bg-[#1C221E] border border-[#D8F078]/25 text-xs font-mono text-[#D8F078] self-start sm:self-auto">
-            Cutoff Policy: 2 Hours Prior
+          <div className="px-3.5 py-1.5 rounded-full bg-[#1C221E] border border-[#D8F078]/25 text-xs font-mono text-[#D8F078] self-start sm:self-auto flex items-center gap-1.5">
+            {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            <span>Cutoff Policy: 2 Hours Prior</span>
           </div>
         </div>
 
@@ -189,8 +299,9 @@ export const StudentPortal: React.FC = () => {
                   </div>
                 ) : (
                   <button
+                    disabled={isSubmitting}
                     onClick={() => handleToggleAttendance(slot.type)}
-                    className={`w-full py-3 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-95 ${
+                    className={`w-full py-3 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 ${
                       isAttending
                         ? 'bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/40 shadow-sm hover:bg-[#123B2A]/80'
                         : 'bg-[#28312B] text-[#F7F5EF] hover:bg-[#28312B]/80'
@@ -334,7 +445,6 @@ export const StudentPortal: React.FC = () => {
                   </div>
                 </div>
 
-
                 {/* Rating CTA Button */}
                 <div className="pt-3 border-t border-[#28312B] flex items-center justify-between">
                   <span className="text-xs text-[#A9B7A0]">Did you enjoy this dish?</span>
@@ -430,10 +540,15 @@ export const StudentPortal: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95"
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Submit Rating</span>
+                  {isSubmitting ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Send className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isSubmitting ? 'Submitting...' : 'Submit Rating'}</span>
                 </button>
               </div>
             </form>

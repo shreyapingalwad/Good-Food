@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { UserRole } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { AuthModal } from '../common/AuthModal';
 import { 
   GraduationCap, 
   ChefHat, 
@@ -9,7 +11,12 @@ import {
   ArrowLeft,
   Leaf,
   Menu,
-  X
+  X,
+  LogIn,
+  LogOut,
+  UserCheck,
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
 
 interface PortalShellProps {
@@ -26,6 +33,8 @@ export const PortalShell: React.FC<PortalShellProps> = ({
   children
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const { user, logout, switchDevRole, isLoading } = useAuth();
 
   const roleMetadata: Record<UserRole, { title: string; subtitle: string; icon: any; color: string }> = {
     student: {
@@ -70,6 +79,8 @@ export const PortalShell: React.FC<PortalShellProps> = ({
     { id: 'ngo', label: 'NGO Network', icon: HeartHandshake },
     { id: 'admin', label: 'Admin', icon: ShieldCheck }
   ];
+
+  const isRoleMismatched = user && user.role !== currentRole;
 
   return (
     <div className="min-h-screen bg-[#151916] text-[#F7F5EF] flex flex-col">
@@ -133,14 +144,52 @@ export const PortalShell: React.FC<PortalShellProps> = ({
               })}
             </nav>
 
-            {/* Right: Return to Overview Button & Mobile Menu Toggle */}
-            <div className="flex items-center gap-2.5">
+            {/* Right: User Profile, Sign-In & Overview Page */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <div className="hidden md:flex flex-col text-right">
+                    <span className="text-xs font-bold text-[#F7F5EF] leading-tight truncate max-w-[130px]">
+                      {user.full_name}
+                    </span>
+                    <span className="text-[10px] font-mono text-[#D8F078] leading-none uppercase">
+                      {user.role} {user.facility_id ? `• ${user.facility_id.split(' - ')[0]}` : ''}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setIsAuthModalOpen(true)}
+                    title="Switch Account"
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-[#1C221E] hover:bg-[#28312B] text-[#A9B7A0] hover:text-[#D8F078] border border-[#28312B] transition-colors flex items-center gap-1 text-xs"
+                  >
+                    <UserCheck className="w-3.5 h-3.5 text-[#D8F078]" />
+                    <span className="hidden sm:inline text-[11px]">Switch</span>
+                  </button>
+                  <button
+                    onClick={logout}
+                    title="Sign Out"
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-[#1C221E] hover:bg-red-950/40 text-[#A9B7A0] hover:text-red-400 border border-[#28312B] transition-colors flex items-center gap-1 text-xs"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline text-[11px]">Logout</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#123B2A] text-[#D8F078] hover:bg-[#123B2A]/80 border border-[#D8F078]/35 shadow-sm transition-all"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Sign In</span>
+                </button>
+              )}
+
               <button
                 onClick={onReturnHome}
-                className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#A9B7A0] hover:text-[#F7F5EF] bg-[#1C221E] hover:bg-[#28312B] border border-[#28312B] transition-colors"
+                className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#A9B7A0] hover:text-[#F7F5EF] bg-[#1C221E] hover:bg-[#28312B] border border-[#28312B] transition-colors"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Overview Page</span>
+                <span>Overview</span>
               </button>
 
               {/* Mobile Role Menu Toggle */}
@@ -184,13 +233,23 @@ export const PortalShell: React.FC<PortalShellProps> = ({
                 );
               })}
             </div>
-            <div className="pt-2 border-t border-[#28312B]">
+            <div className="pt-2 border-t border-[#28312B] flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setIsAuthModalOpen(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="py-2 px-3 rounded-xl text-xs font-bold text-[#D8F078] bg-[#123B2A] border border-[#D8F078]/30 flex items-center gap-1.5"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>{user ? 'Account Settings' : 'Sign In'}</span>
+              </button>
               <button
                 onClick={onReturnHome}
-                className="w-full py-2.5 rounded-xl text-xs font-semibold text-[#F7F5EF] bg-[#151916] border border-[#28312B] flex items-center justify-center gap-2"
+                className="py-2 px-3 rounded-xl text-xs font-semibold text-[#A9B7A0] hover:text-[#F7F5EF] flex items-center gap-1.5"
               >
-                <ArrowLeft className="w-4 h-4 text-[#D8F078]" />
-                <span>Return to Overview Homepage</span>
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Overview Page</span>
               </button>
             </div>
           </div>
@@ -201,7 +260,7 @@ export const PortalShell: React.FC<PortalShellProps> = ({
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         
         {/* Workspace Context Sub-header */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-[#28312B]">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-6 border-b border-[#28312B]">
           <div className="space-y-1">
             <h2 className="text-xl sm:text-2xl font-editorial font-bold text-[#F7F5EF] flex items-center gap-2.5">
               <span>{meta.title}</span>
@@ -213,14 +272,66 @@ export const PortalShell: React.FC<PortalShellProps> = ({
 
           <div className="flex items-center gap-2 text-xs font-mono self-start sm:self-auto">
             <span className="px-3 py-1 rounded-full bg-[#1C221E] text-[#D8F078] border border-[#D8F078]/25 font-bold">
-              Facility: Grand Central B
+              Facility: {user?.facility_id ? user.facility_id : 'Grand Central Mess - Block B'}
             </span>
           </div>
         </div>
 
+        {/* Role Authorization / Active Session Banner */}
+        {isRoleMismatched && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>
+                You are currently signed in as <strong>{user?.full_name}</strong> (role: <strong>{user?.role}</strong>). 
+                Actions in this portal require <strong>{currentRole}</strong> authorization.
+              </span>
+            </div>
+            <button
+              onClick={() => switchDevRole(currentRole)}
+              className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/40 hover:bg-[#123B2A]/80 font-semibold text-[11px] shrink-0 flex items-center gap-1.5 shadow-sm"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Switch to {currentRole} demo account</span>
+            </button>
+          </div>
+        )}
+
+        {!user && !isLoading && (
+          <div className="mb-6 p-4 rounded-2xl bg-[#1C221E] border border-[#D8F078]/20 text-[#A9B7A0] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-[#D8F078] shrink-0" />
+              <span>
+                Viewing in guest exploration mode. Connect with your verified institutional account to record live dining actions.
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => switchDevRole(currentRole)}
+                className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30 hover:bg-[#123B2A]/80 font-bold text-[11px] shrink-0"
+              >
+                Sign in as {currentRole}
+              </button>
+              <button
+                onClick={() => setIsAuthModalOpen(true)}
+                className="px-3 py-1.5 rounded-xl bg-[#151916] text-[#F7F5EF] border border-[#28312B] hover:border-[#D8F078]/40 text-[11px] shrink-0"
+              >
+                Custom Login
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Portal Views */}
         {children}
       </main>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        targetRole={currentRole}
+      />
 
     </div>
   );

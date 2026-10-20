@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { storageService } from '../../services/storageService';
-import { PredictionFeatures, PredictionResult } from '../../types';
+import { PredictionFeatures } from '../../types';
+import { useAuth } from '../../context/AuthContext';
+import { apiClient, ApiError, ManagerOverviewResponse, ForecastResponse } from '../../services/apiClient';
 import { 
   LayoutDashboard, 
   Sliders, 
@@ -9,24 +11,32 @@ import {
   ShieldCheck, 
   AlertTriangle, 
   CheckCircle2, 
-  Sparkles,
-  BarChart3,
-  TrendingDown,
-  TrendingUp,
-  FileCheck,
-  Cpu,
-  Layers,
-  ArrowUpRight,
-  Info
+  Sparkles, 
+  BarChart3, 
+  TrendingDown, 
+  TrendingUp, 
+  FileCheck, 
+  Cpu, 
+  Layers, 
+  ArrowUpRight, 
+  Info,
+  Loader2
 } from 'lucide-react';
 
 export const ManagerPortal: React.FC = () => {
+  const { user, isAuthenticated, switchDevRole } = useAuth();
   const [safetyBuffer, setSafetyBuffer] = useState<number>(5.0);
   const [overrideReason, setOverrideReason] = useState<string>('');
   const [isOverrideOpen, setIsOverrideOpen] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Prediction model run
+  // Live Backend Overview Data
+  const [overviewData, setOverviewData] = useState<ManagerOverviewResponse | null>(null);
+  const [forecastResult, setForecastResult] = useState<ForecastResponse | null>(null);
+
+  // Prediction model inputs
   const [features, setFeatures] = useState<PredictionFeatures>({
     expectedAttendance: 1450,
     dayOfWeek: 2, // Tuesday
@@ -38,27 +48,103 @@ export const ManagerPortal: React.FC = () => {
     safetyBufferPercent: 5.0
   });
 
-  const prediction = storageService.calculatePrediction({
-    ...features,
-    safetyBufferPercent: safetyBuffer
-  });
+  // Fetch overview and run prediction
+  const fetchManagerData = async () => {
+    setIsLoading(true);
+    try {
+      if (isAuthenticated && (user?.role === 'manager' || user?.role === 'admin')) {
+        const [overviewRes, forecastRes] = await Promise.allSettled([
+          apiClient.manager.getOverview(),
+          apiClient.manager.predictForecast({
+            expected_attendance: features.expectedAttendance,
+            day_of_week: features.dayOfWeek,
+            is_holiday: features.isHoliday,
+            is_exam_period: features.isExamPeriod,
+            weather_temp: features.weatherTemp,
+            is_rainy: features.isRainy,
+            menu_item_popularity: features.menuItemPopularity,
+            safety_buffer_percent: safetyBuffer
+          })
+        ]);
 
-  const handleApplyBufferOverride = (e: React.FormEvent) => {
+        if (overviewRes.status === 'fulfilled') {
+          setOverviewData(overviewRes.value);
+          if (overviewRes.value.current_safety_buffer_percent !== undefined) {
+            setSafetyBuffer(overviewRes.value.current_safety_buffer_percent);
+          }
+        }
+
+        if (forecastRes.status === 'fulfilled') {
+          setForecastResult(forecastRes.value);
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching manager data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchManagerData();
+  }, [isAuthenticated, user]);
+
+  // Recalculate prediction when safety buffer changes
+  const runPrediction = async (buffer: number) => {
+    try {
+      if (isAuthenticated && (user?.role === 'manager' || user?.role === 'admin')) {
+        const res = await apiClient.manager.predictForecast({
+          expected_attendance: features.expectedAttendance,
+          day_of_week: features.dayOfWeek,
+          is_holiday: features.isHoliday,
+          is_exam_period: features.isExamPeriod,
+          weather_temp: features.weatherTemp,
+          is_rainy: features.isRainy,
+          menu_item_popularity: features.menuItemPopularity,
+          safety_buffer_percent: buffer
+        });
+        setForecastResult(res);
+      }
+    } catch (err) {
+      console.warn('Failed to calculate forecast:', err);
+    }
+  };
+
+  const handleApplyBufferOverride = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!overrideReason.trim()) return;
 
-    storageService.addAudit({
-      actorName: 'Dr. Anita Roy (Executive Mess Manager)',
-      actorRole: 'manager',
-      action: 'BUFFER_OVERRIDE_RECORDED',
-      details: `Manager adjusted safety buffer to ${safetyBuffer}%. Justification: "${overrideReason}"`,
-      severity: 'warning'
-    });
-
-    setIsOverrideOpen(false);
-    setOverrideReason('');
-    setNotification(`Safety buffer updated to ${safetyBuffer}%. Logged in compliance audit.`);
-    setTimeout(() => setNotification(null), 4000);
+    setIsSubmitting(true);
+    try {
+      if (isAuthenticated && (user?.role === 'manager' || user?.role === 'admin')) {
+        await apiClient.manager.overrideSafetyBuffer({
+          safety_buffer_percent: safetyBuffer,
+          justification: overrideReason.trim()
+        });
+        await runPrediction(safetyBuffer);
+        setIsOverrideOpen(false);
+        setOverrideReason('');
+        setNotification(`Safety buffer updated to ${safetyBuffer}%. Logged in backend audit ledger.`);
+      } else {
+        storageService.addAudit({
+          actorName: user?.full_name || 'Dr. Anita Roy (Executive Mess Manager)',
+          actorRole: 'manager',
+          action: 'BUFFER_OVERRIDE_RECORDED',
+          details: `Manager adjusted safety buffer to ${safetyBuffer}%. Justification: "${overrideReason}"`,
+          severity: 'warning'
+        });
+        setIsOverrideOpen(false);
+        setOverrideReason('');
+        setNotification(`Preview mode: Safety buffer updated to ${safetyBuffer}%. Sign in as Manager to record server audit.`);
+      }
+      setTimeout(() => setNotification(null), 4500);
+    } catch (err: unknown) {
+      const msg = err instanceof ApiError ? err.message : 'Failed to update safety buffer.';
+      setNotification(msg);
+      setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleExportCsv = () => {
@@ -66,6 +152,18 @@ export const ManagerPortal: React.FC = () => {
     setNotification('Sustainability audit report CSV generated and downloaded.');
     setTimeout(() => setNotification(null), 4000);
   };
+
+  // Fallback prediction calculation if offline/preview
+  const fallbackPrediction = storageService.calculatePrediction({
+    ...features,
+    safetyBufferPercent: safetyBuffer
+  });
+
+  const baselineKg = forecastResult ? forecastResult.historical_baseline_kg : fallbackPrediction.baselineKg;
+  const mlPredictedKg = forecastResult ? forecastResult.ml_predicted_kg : fallbackPrediction.mlPredictedKg;
+  const recommendedPreparationKg = forecastResult ? forecastResult.recommended_preparation_kg : fallbackPrediction.recommendedPreparationKg;
+  const confidenceScore = forecastResult?.confidence_score ?? 0.94;
+  const maeVal = forecastResult ? forecastResult.mae_kg : 4.2;
 
   // Weekly Waste Trends Data
   const weeklyTrends = [
@@ -92,11 +190,31 @@ export const ManagerPortal: React.FC = () => {
       
       {/* Toast Alert */}
       {notification && (
-        <div className="p-4 rounded-2xl bg-[#123B2A] border border-[#D8F078]/40 text-[#D8F078] text-xs font-semibold flex items-center justify-between shadow-glow-lime">
+        <div className="p-4 rounded-2xl bg-[#123B2A] border border-[#D8F078]/40 text-[#D8F078] text-xs font-semibold flex items-center justify-between shadow-glow-lime animate-in fade-in">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-[#D8F078]" />
             <span>{notification}</span>
           </div>
+        </div>
+      )}
+
+      {/* Role Banner if not logged in as Manager */}
+      {(!isAuthenticated || (user?.role !== 'manager' && user?.role !== 'admin')) && (
+        <div className="p-4 rounded-2xl bg-[#1C221E] border border-[#28312B] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2 text-[#A9B7A0]">
+            <Info className="w-4 h-4 text-[#D8F078] shrink-0" />
+            <span>
+              {isAuthenticated
+                ? `Logged in as ${user?.role} (${user?.username}). Connect with a Manager profile to record safety buffer overrides.`
+                : 'Browsing manager console in live preview mode. Sign in to connect with live ML forecasting.'}
+            </span>
+          </div>
+          <button
+            onClick={() => switchDevRole('manager')}
+            className="px-3.5 py-1.5 rounded-xl bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/30 font-semibold text-[11px] hover:bg-[#123B2A]/80 transition-all shrink-0"
+          >
+            Authenticate as dr_anita_roy
+          </button>
         </div>
       )}
 
@@ -147,7 +265,7 @@ export const ManagerPortal: React.FC = () => {
           </div>
           <div>
             <div className="text-3xl font-bold font-editorial text-[#F7F5EF]">
-              {prediction.baselineKg.toFixed(1)} kg
+              {baselineKg.toFixed(1)} kg
             </div>
             <p className="text-xs text-[#A9B7A0] mt-1">Expected attendance × 0.42 kg/intake</p>
           </div>
@@ -162,21 +280,21 @@ export const ManagerPortal: React.FC = () => {
           <div className="flex items-center justify-between pb-3 border-b border-[#28312B]">
             <span className="text-xs font-mono text-[#D8F078] uppercase font-bold flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5" />
-              <span>Tier 2: Random Forest ML</span>
+              <span>Tier 2: ML Engine</span>
             </span>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#123B2A] text-[#D8F078] border border-[#D8F078]/25">
-              Trained Model
+              Confidence {(confidenceScore * 100).toFixed(0)}%
             </span>
           </div>
           <div>
             <div className="text-3xl font-bold font-editorial text-[#D8F078]">
-              {prediction.mlPredictedKg.toFixed(1)} kg
+              {mlPredictedKg.toFixed(1)} kg
             </div>
             <p className="text-xs text-[#A9B7A0] mt-1">Features: Tuesday, Sunny, Rating 8.5/10</p>
           </div>
           <div className="p-3 rounded-xl bg-[#151916] text-[11px] font-mono text-[#A9B7A0] space-y-1">
-            <div>Validated MAE: ±4.2 kg</div>
-            <div>Chronological split (30-day window)</div>
+            <div>Validated MAE: ±{maeVal.toFixed(1)} kg</div>
+            <div>Model: Empirical + Feature Adjustments</div>
           </div>
         </div>
 
@@ -193,10 +311,10 @@ export const ManagerPortal: React.FC = () => {
           </div>
           <div>
             <div className="text-4xl font-bold font-editorial text-[#F7F5EF]">
-              {prediction.recommendedPreparationKg.toFixed(1)} kg
+              {recommendedPreparationKg.toFixed(1)} kg
             </div>
             <p className="text-xs text-[#D8F078] font-mono mt-1">
-              Safety margin: +{(prediction.recommendedPreparationKg - prediction.baselineKg).toFixed(1)} kg
+              Safety margin: +{(recommendedPreparationKg - baselineKg).toFixed(1)} kg
             </p>
           </div>
           <div className="p-3 rounded-xl bg-[#123B2A]/40 text-[11px] text-[#A9B7A0] flex items-center justify-between">
@@ -220,7 +338,7 @@ export const ManagerPortal: React.FC = () => {
             </p>
           </div>
           <div className="text-xs font-mono text-[#A9B7A0]">
-            Average Waste Ratio: <strong className="text-[#D8F078]">4.5%</strong> (Industry Avg: 18%)
+            Average Waste Ratio: <strong className="text-[#D8F078]">4.5%</strong> (Campus Baseline: 18%)
           </div>
         </div>
 
@@ -358,7 +476,7 @@ export const ManagerPortal: React.FC = () => {
               <div className="p-4 rounded-2xl bg-[#151916] border border-[#28312B] flex items-center justify-between text-xs font-mono">
                 <span className="text-[#A9B7A0]">Updated Batch Target:</span>
                 <span className="text-[#D8F078] font-bold">
-                  {(prediction.baselineKg * (1 + safetyBuffer / 100)).toFixed(1)} kg
+                  {(baselineKg * (1 + safetyBuffer / 100)).toFixed(1)} kg
                 </span>
               </div>
 
@@ -387,10 +505,11 @@ export const ManagerPortal: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95"
+                  disabled={isSubmitting}
+                  className="flex-1 py-3 rounded-xl text-xs font-bold text-[#151916] bg-[#D8F078] hover:bg-[#E4F88D] shadow-glow-lime flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  <FileCheck className="w-3.5 h-3.5" />
-                  <span>Log & Apply Override</span>
+                  {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileCheck className="w-3.5 h-3.5" />}
+                  <span>{isSubmitting ? 'Saving...' : 'Log & Apply Override'}</span>
                 </button>
               </div>
 
