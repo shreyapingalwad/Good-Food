@@ -832,3 +832,34 @@ def test_pin_and_secret_redaction_guarantee(client: TestClient, setup_manager_ad
     assert "pickup_pin_hash" not in res_audit
     assert "password_hash" not in res_audit
     assert "session_token" not in res_audit
+
+
+def test_manager_forecast_prediction_dual_engine(client: TestClient, setup_manager_admin_data, db_session: Session):
+    """Verifies dual-engine forecasting endpoint calculation and feature weighting."""
+    seed_operational_logs(db_session, facility_id="FAC-NORTH")
+
+    csrf, _ = authenticate_client(client, "manager_north")
+    payload = {
+        "meal_type": "Lunch",
+        "expected_attendance": 1000,
+        "is_rainy": True,
+        "is_exam_period": True,
+        "weather_temp": 22.0,
+        "menu_item_popularity": 8.5,
+        "safety_buffer_percent": 6.0,
+    }
+    res = client.post("/api/v1/manager/forecast/predict", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+
+    assert data["facility_id"] == "FAC-NORTH"
+    assert data["meal_type"] == "Lunch"
+    assert data["expected_attendance"] == 1000
+    assert data["historical_baseline_kg"] > 0
+    assert data["ml_predicted_kg"] > data["historical_baseline_kg"]  # due to rain & exam boosts
+    assert data["recommended_preparation_kg"] > data["ml_predicted_kg"]  # includes safety buffer
+    assert data["safety_buffer_percent"] == 6.0
+    assert data["confidence_score"] >= 90.0
+    assert len(data["feature_contributions"]) >= 3
+    assert data["is_historical_data"] is True
+

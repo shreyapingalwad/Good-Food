@@ -66,8 +66,11 @@ from app.schemas.system_config import (
 )
 from app.schemas.manager import (
     DonationSummaryResponse,
+    FeatureContribution,
     FoodWasteSummaryResponse,
     ForecastInputsResponse,
+    ForecastRequest,
+    ForecastResponse,
     ManagerOverviewResponse,
     MealTypeWasteBreakdown,
     NgoRedistributionStat,
@@ -148,6 +151,9 @@ __all__ = [
     "DonationSummaryResponse",
     "NgoRedistributionStat",
     "ForecastInputsResponse",
+    "ForecastRequest",
+    "ForecastResponse",
+    "FeatureContribution",
     "SafetyBufferOverrideRequest",
     "SafetyBufferConfigResponse",
     "CurrentUserResponse",
